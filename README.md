@@ -269,7 +269,7 @@ Proyek ini menggunakan lisensi **MIT** — lihat file [`LICENSE`](LICENSE) untuk
 
 **Author:** David Cungniago
 **Email:** david.cungniago@student.pradita.ac.id
-**GitHub:** [@yourusername](https://github.com/yourusername)
+**GitHub:** [@davidcungniago](https://github.com/yourusername)
 
 > Proyek ini dikembangkan sebagai Tugas Akhir mata kuliah *Uji Penetrasi Sistem Jaringan Keamanan* dan portofolio cyber security.
 
