@@ -1,0 +1,6 @@
+import 'package:flutter/material.dart';
+import '../services/alert_service.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/loading_indicator.dart';
+
+class AlertsScreen extends StatelessWidget { const AlertsScreen({super.key, required this.projectId}); final String projectId; @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Riwayat Peringatan')), body: FutureBuilder(future: AlertService().getAlerts(projectId), builder: (context, snapshot) { if (!snapshot.hasData) return const LoadingIndicator(); final alerts = snapshot.data!; if (alerts.isEmpty) return const EmptyState(message: 'Belum ada peringatan terkirim.', icon: Icons.notifications_none); return ListView.separated(padding: const EdgeInsets.all(16), itemCount: alerts.length, separatorBuilder: (_, __) => const SizedBox(height: 8), itemBuilder: (context, index) { final alert = alerts[index]; return Card(child: ListTile(leading: const Icon(Icons.notifications_active_outlined), title: Text(alert.type), subtitle: Text(alert.message), trailing: Text('${alert.sentAt.day}/${alert.sentAt.month}\n${alert.sentAt.hour.toString().padLeft(2, '0')}:${alert.sentAt.minute.toString().padLeft(2, '0')}'), isThreeLine: true)); }); })); }

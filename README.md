@@ -18,6 +18,7 @@
 - [Profil Target Pengguna](#-profil-target-pengguna)
 - [Manfaat Aplikasi](#-manfaat-aplikasi)
 - [Fitur Inti (MVP)](#-fitur-inti-mvp)
+- [Fitur yang Tidak Dikerjakan](#-fitur-yang-tidak-dikerjakan)
 - [Kriteria Keberhasilan](#-kriteria-keberhasilan)
 - [Arsitektur](#-arsitektur)
 - [Tech Stack](#-tech-stack)
@@ -66,6 +67,19 @@ Pulse versi mobile **tidak** menyasar CISO/auditor yang butuh laporan kepatuhan 
 6. **Alert Satu Channel (Email)** — kirim notifikasi saat scan menemukan CVE kritis baru atau drift.
 7. **Autentikasi Sederhana** — login single-user/JWT dasar (tanpa role-based access kompleks di MVP).
 
+## 🚧 Fitur yang Tidak Dikerjakan
+
+Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja tidak dikerjakan dulu:
+
+- Visualisasi graf dependensi interaktif — diganti tabel flat.
+- Multi-channel alert (Telegram/Slack/Discord) — hanya email di MVP.
+- Integrasi NVD API dan CISA KEV feed — hanya OSV.dev.
+- Export laporan PDF/SARIF/compliance report.
+- Scheduled/otomatis re-scan (Celery Beat) — scan hanya manual via tombol.
+- Graph database (Neo4j) — relasi dependensi disimpan flat di PostgreSQL.
+- Role-based access control multi-role (Admin/Security Engineer/Developer/Viewer) — cukup satu jenis user login.
+- Container image scanning — fokus hanya repository Git (package.json, requirements.txt, dll) di MVP.
+- Dependency confusion detection & abandonware scoring — kandidat fase berikutnya jika waktu tersisa.
 
 ## ✅ Kriteria Keberhasilan
 
@@ -106,6 +120,8 @@ Pulse versi mobile **tidak** menyasar CISO/auditor yang butuh laporan kepatuhan 
 ```
 
 Detail arsitektur lengkap, skema data, dan API contract ada di [`docs/architecture/Architecture.md`](docs/architecture/Architecture.md).
+
+Dokumentasi implementasi fitur Asset Management (state management, form, validasi, enam kondisi UI, dan prompt AI yang digunakan) ada di [`docs/P4-asset-management.md`](docs/P4-asset-management.md).
 
 ---
 
