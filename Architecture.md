@@ -1,216 +1,152 @@
-Architecture.md: Build a full-stack web application named **Pulse (Continuous Supply Chain Integrity Monitor)**.
+Architecture.md: Build a full-stack mobile-companion application named **Pulse (Continuous Supply Chain Integrity Monitor)**.
 
 ## Purpose
 
-Help engineering and security teams monitor the integrity of their software supply chain. The application ingests SBOM (Software Bill of Materials) data from Git repositories, container images, or manual uploads, analyzes each component for multi-dimensional risk (CVE, license, abandonware, dependency confusion), continuously monitors dependency drift between scans, visualizes the dependency graph, and sends alerts when new risks are detected.
+Give developers and security engineers a lightweight mobile companion to check the security status of their software projects on the go. The app lets the user add Git repositories, trigger a manual scan, view detected components and CVEs, see drift between scans, and receive an email alert when a critical CVE or suspicious drift is found. This is not a full compliance/auditing dashboard — that use case is explicitly out of scope for this version (see `docs/PROPOSAL.md`).
 
 ## Use this stack
 
+* Mobile Frontend: Flutter + Riverpod (state management) + go_router (routing) + dio (HTTP client)
 * Backend: Python 3.11+ + FastAPI
-* Frontend: Next.js 14 (App Router) + TypeScript + Tailwind CSS + shadcn/ui
-* Relational Database: PostgreSQL 16
-* Graph Database: Neo4j Community Edition (dependency graph)
+* Database: PostgreSQL 16 (single relational database — no graph database in this version)
 * ORM: SQLAlchemy 2.0 + Alembic (migrations)
-* Task Queue: Celery + Redis (async scanning, analysis, alerting)
-* Scheduler: Celery Beat (periodic re-scans)
-* Graph Visualization: Cytoscape.js
-* Data Fetching: TanStack Query
-* State Management: Zustand
-* API style: REST API + WebSocket (live scan/alert updates)
-* SBOM Generation: Syft
-* Vulnerability Scanning: Grype (or Trivy)
-* Vulnerability Data Sources: OSV.dev API, NVD API, CISA KEV feed
-* File Storage: MinIO (S3-compatible) or local filesystem for MVP
-* Use Docker Compose for PostgreSQL, Neo4j, Redis, MinIO, backend, and frontend
-* Use `.env.example` for database URL, Neo4j credentials, SMTP, Telegram/Slack/Discord webhooks, and optional API keys
+* API style: REST API (synchronous — no task queue/worker in this version)
+* SBOM Generation: Syft (invoked synchronously by the scan endpoint)
+* Vulnerability Data Source: OSV.dev API only (no NVD, no CISA KEV in this version)
+* Alerting: Email (SMTP) only
+* Auth: JWT, single user role (no RBAC in this version)
+* Use Docker Compose for PostgreSQL and the backend
+* Use `.env.example` for database URL, SMTP credentials, and JWT secret
 
 ## Code rules
 
 * Do not add comments unless truly necessary.
-* Use PascalCase for Python classes, Pydantic schemas, SQLAlchemy models, and TypeScript types, interfaces, enums, and React components.
-* Use snake_case for Python functions, variables, and database column names.
-* Use camelCase for TypeScript local variables and function names.
+* Backend: use PascalCase for Pydantic schema class names and SQLAlchemy model class names; use snake_case for functions, variables, and database column names.
+* Flutter: use PascalCase for classes, widgets, enums, and Riverpod providers/notifiers; use camelCase for local variables and function names.
 * Keep code lines below 150 characters where practical.
 * Use a clean and simple folder structure.
-* Authentication uses JWT with role-based access control (Admin, Security Engineer, Developer, Viewer) from the first version — this application is multi-user by design.
+* Authentication uses JWT from the first version, but with a single implicit role — no admin/viewer/role distinctions in this version.
 
 ## Main entities
 
-1. Organization
+1. User
 
    * Id
-   * Name
-   * CreatedAt
-
-2. User
-
-   * Id
-   * OrganizationId
    * Email
    * PasswordHash
-   * Role
    * CreatedAt
 
-3. Project
+2. Project
 
    * Id
-   * OrganizationId
+   * UserId
    * Name
    * Description
    * CreatedAt
 
-4. Asset
+3. Asset
 
    * Id
    * ProjectId
-   * Type (Repository, ContainerImage, Manual)
-   * Source
+   * Name
+   * RepositoryUrl
+   * Owner
+   * RepositoryName
+   * IsActive
+   * LastScannedAt
    * CreatedAt
 
-5. Sbom
+4. ScanResult
 
    * Id
    * AssetId
-   * Format (CycloneDx, Spdx)
-   * Version
-   * FilePath
-   * CreatedAt
+   * ComponentCount
+   * CriticalVulnerabilityCount
+   * StartedAt
+   * FinishedAt
+   * Status
 
-6. Component
+5. Component
 
    * Id
+   * ScanResultId
    * Name
    * Version
    * Ecosystem
    * Purl
    * License
-   * Metadata
 
-7. Vulnerability
+6. Vulnerability
 
    * Id
    * ComponentId
    * CveId
    * Severity
-   * Cvss
    * Description
 
-8. DriftEvent
+7. DriftEvent
 
    * Id
    * AssetId
    * Type (Added, Removed, Changed)
+   * ComponentName
    * Details
    * DetectedAt
 
-9. Alert
+8. AlertLog
 
    * Id
    * ProjectId
    * Type
-   * Severity
    * Message
-   * Channel
    * SentAt
-
-10. AlertConfig
-
-    * Id
-    * ProjectId
-    * ChannelType
-    * ConfigJson
-
-11. ScanJob
-
-    * Id
-    * AssetId
-    * Status
-    * StartedAt
-    * FinishedAt
-    * ResultSummary
-
-**Graph database (Neo4j) — mirrors relational data for traversal:**
-
-* Nodes: `Component {Name, Version, Ecosystem, Purl}`, `Asset {Id, Name, Type}`, `Vulnerability {CveId, Severity}`
-* Relationships: `(Asset)-[:CONTAINS]->(Component)`, `(Component)-[:DEPENDS_ON]->(Component)`, `(Component)-[:HAS_VULN]->(Vulnerability)`
 
 ## Database rules
 
-* A Component must be unique by `Purl` (package URL) plus `Version`.
+* A Component is scoped to a single ScanResult (each scan stores its own full component snapshot) — components are never overwritten or deleted between scans, so historical snapshots stay intact for drift comparison.
 * A Vulnerability must be unique by `ComponentId` and `CveId`.
-* Never delete existing Sbom, Component, or Vulnerability history during a re-scan.
-* Every re-scan creates a new `Sbom` record and a new `ScanJob`; previous scans remain for audit and drift comparison.
-* Drift is computed by diffing the latest `Sbom` against the immediately preceding `Sbom` for the same `Asset`.
-* Update `LastSyncedAt`-equivalent (`ScanJob.FinishedAt`) after every successful scan.
-* Use Alembic migrations and seed one example organization, one project, three assets (one repository, one container image, one manual SBOM upload), and sample components with a mix of safe and vulnerable versions.
+* Never delete existing ScanResult, Component, or Vulnerability history.
+* Drift is computed by diffing the newest ScanResult's components against the immediately preceding ScanResult's components for the same Asset.
+* Update `Asset.LastScannedAt` after a successful scan.
+* Use Alembic migrations and seed one example user, one project, two assets (public repositories), and two ScanResults per asset (to demonstrate drift out of the box).
 
 ## Backend features
 
-1. CRUD Organization & User
+1. Auth
 
-   * Register, list, update, delete users. Assign role per user.
+   * Register and login endpoints, JWT issued on login.
 
 2. CRUD Project
 
-   * Create, list, detail, update, delete project.
+   * Create, list, detail, update, delete project (scoped to the logged-in user).
 
 3. CRUD Asset
 
-   * Add, edit, delete asset (repository, container image, or manual SBOM) inside a project.
-   * Validate and parse GitHub/GitLab repository URLs and container image references.
+   * Add, edit, delete asset (Git repository) inside a project.
+   * Validate and parse the repository URL (`https://github.com/owner/repository` or GitLab equivalent).
 
-4. SBOM Ingestion
+4. Manual Scan
 
-   * Endpoint to upload a CycloneDX or SPDX file manually.
-   * Endpoint to trigger a Git-based scan (auto-detect `package.json`, `requirements.txt`, `go.mod`, `pom.xml`, `Cargo.toml`).
-   * Endpoint to trigger a container image scan via Syft.
-   * Public API endpoint for CI/CD pipelines to push an SBOM directly.
-
-5. Manual & Scheduled Scan Trigger
-
-   * Endpoint to trigger a re-scan for one asset.
-   * Endpoint to trigger a re-scan for all active assets in a project.
-   * Celery Beat runs scheduled re-scans per the asset's configured interval (1h / 6h / daily / weekly).
+   * Endpoint to trigger a scan for one asset. Runs synchronously and returns the result in the same request/response cycle (no background worker).
+   * Steps: clone/read dependency manifest → run Syft to generate an SBOM → for each component, query OSV.dev for CVEs → persist a new ScanResult with its Components and Vulnerabilities → diff against the previous ScanResult to produce DriftEvents → if a critical CVE or drift is found, send an email alert and log it.
    * Return a result containing:
 
      * AssetId
      * ComponentCount
+     * CriticalVulnerabilityCount
      * NewComponentCount
      * RemovedComponentCount
      * ChangedComponentCount
-     * DriftDetected
-     * LastScannedAt
+     * FinishedAt
      * Message
+   * Show a meaningful error if the repository is private, invalid, unavailable, or OSV.dev's rate limit is reached.
 
-6. Risk Analysis Engine
-
-   * For every component, query OSV.dev and NVD for CVEs.
-   * Detect risky licenses (for example GPL in a commercial context).
-   * Flag abandonware (no release in the last 24 months, via npm/PyPI/Maven registry metadata).
-   * Compute dependency confusion risk using Levenshtein distance against popular package names.
-   * Compute a blast radius score: number of assets that contain a given vulnerable component.
-   * If `GITHUB_TOKEN` is available, use it as a Bearer token for GitHub API requests; otherwise fall back to unauthenticated rate limits.
-   * Show a meaningful error if a repository is private, invalid, unavailable, or an external API rate limit is reached.
-
-7. Drift Detection
-
-   * Diff the newest Sbom against the previous one for the same asset.
-   * Classify each change as Added, Removed, or Changed.
-   * Persist every drift event; never overwrite drift history.
-
-8. Alert Engine
-
-   * Configure channels per project: Email (SMTP), Telegram Bot, Slack Webhook, Discord Webhook.
-   * Trigger on: new critical CVE, drift detected, risky license found, abandonware found.
-   * Deduplicate similar alerts within a configurable time window before sending.
-
-9. Dashboard & Reporting API
+5. Dashboard API
 
    * Return a project summary:
 
      * TotalAssets
      * TotalComponents
-     * TotalVulnerabilities
      * CriticalVulnerabilities
      * AssetsWithDrift
      * AssetsNeverScanned
@@ -219,123 +155,122 @@ Help engineering and security teams monitor the integrity of their software supp
      * AssetId
      * AssetName
      * ComponentCount
-     * VulnerabilityCount
-     * HighestSeverity
+     * CriticalVulnerabilityCount
      * LastScannedAt
      * RiskStatus
    * RiskStatus rules:
 
-     * `CRITICAL`: at least one unresolved critical CVE
-     * `WARNING`: risky license, abandonware, or non-critical CVE present
-     * `HEALTHY`: no known issues
-   * Generate a PDF compliance report per project.
-   * Export SBOM as CycloneDX or SPDX.
-   * Export findings as SARIF.
-   * Export raw data as CSV/JSON.
+     * `CRITICAL`: at least one critical CVE in the latest scan
+     * `WARNING`: any non-critical CVE or drift present in the latest scan
+     * `HEALTHY`: no known issues, and asset has been scanned at least once
+     * `NOT_SCANNED`: asset has never been scanned
 
-## Frontend pages
+6. Alert
 
-1. Dashboard
+   * Send one email when a scan finds a critical CVE or any drift.
+   * Log every alert sent to `AlertLog` (no multi-channel config, no deduplication window in this version).
 
-   * Project selector.
-   * Summary cards: total assets, components, vulnerabilities, critical vulnerabilities, assets with drift.
-   * Table showing each asset, component count, vulnerability count, highest severity, last scanned time, and risk status.
-   * Button: `Scan All Assets`.
-   * Show loading state, successful scan message, and error message.
-   * Dashboard reads only from the database when opened. It must not trigger a scan automatically.
+## Mobile app screens (Flutter)
 
-2. Project Management
+1. Login / Register
 
-   * List projects.
-   * Form to create and edit projects.
-   * Button to open project dashboard.
+   * Simple email + password form with validation.
 
-3. Asset Management
+2. Project List (home)
 
-   * List assets in a selected project.
-   * Form to add and edit repository URLs, container image references, or manual SBOM uploads.
-   * Button: `Scan Now`.
-   * Show last scan time and component count.
+   * List of the user's projects with a summary badge (healthy/warning/critical count).
+   * Button to create a new project.
 
-4. Dependency Graph
+3. Project Dashboard
 
-   * Interactive Cytoscape.js graph: node = component, edge = "depends on".
-   * Node color by risk level (green/yellow/red).
-   * Click a node to open a detail panel: version, CVEs, license, affected assets.
-   * Filter by risk level or ecosystem.
-   * Blast radius view: select a CVE and highlight every affected asset.
+   * Summary cards: total assets, total components, critical vulnerabilities, assets with drift.
+   * List of assets with risk-status badge and last-scanned time.
+   * Button: `Pindai Semua Aset` (scan all assets in the project, sequentially).
 
-5. Component Detail
+4. Asset Management (the feature implemented in full for the P4 assignment)
 
-   * Show component information, license, and maintenance metadata.
-   * Show CVE list with severity and description.
-   * Show every asset that contains this component.
+   * List of assets in a project — 6 required UI states apply here: initial loading, loaded, empty, error+retry, form validation, submit-loading.
+   * Form to add a new asset by repository URL, with validation (required, must match GitHub/GitLab URL pattern).
+   * Button: `Pindai Sekarang` per asset, disabled while a scan is in flight for that asset.
+   * Shows last scanned time and component/CVE count per asset.
 
-6. Alerts & Notifications
+5. Scan Result Detail
 
-   * List recent alerts with severity and channel.
-   * Form to configure alert channels (SMTP, Telegram, Slack, Discord) per project.
+   * Flat table/list of components found in the latest scan: name, version, license, highest CVE severity.
+   * Section listing drift events since the previous scan (added/removed/changed).
+
+6. Alerts
+
+   * List of alerts sent for the project (type, message, sent time) — read-only in this version.
 
 ## UI requirements
 
 * Use Indonesian language for all labels, buttons, messages, and validation.
-* Create a clean, responsive dashboard with dark mode support.
-* Use simple tables, cards, badges, forms, confirmation dialog before delete, and empty states.
+* Use Material 3 widgets, clean and responsive layout, support both light and dark theme.
+* Use simple lists, cards, and status badges. Use a confirmation dialog before delete. Every list screen must have an explicit empty state.
 * Use status badge colors:
 
   * Healthy: green
-  * Warning: yellow
+  * Warning: orange/yellow
   * Critical: red
-* Charts (trend of vulnerabilities over time) are optional and out of scope for the first version.
+  * Not scanned: grey
+* No interactive graph visualization in this version — component relationships are shown as a flat list, not a node graph.
 
 ## Required API routes
 
+* `POST /api/auth/register`
+* `POST /api/auth/login`
 * `GET /api/projects`
 * `POST /api/projects`
-* `GET /api/projects/:Id`
-* `PUT /api/projects/:Id`
-* `DELETE /api/projects/:Id`
-* `GET /api/projects/:ProjectId/assets`
-* `POST /api/projects/:ProjectId/assets`
-* `PUT /api/assets/:Id`
-* `DELETE /api/assets/:Id`
-* `POST /api/assets/:Id/sbom/upload`
-* `GET /api/assets/:Id/sbom/latest`
-* `GET /api/assets/:Id/sbom/history`
-* `POST /api/assets/:Id/scan`
-* `POST /api/projects/:ProjectId/scan`
-* `GET /api/assets/:Id/components`
-* `GET /api/components/:Id`
-* `GET /api/components/:Id/vulnerabilities`
-* `GET /api/components/:Id/blast-radius`
-* `GET /api/projects/:ProjectId/graph`
-* `GET /api/projects/:ProjectId/drift-events`
-* `GET /api/assets/:Id/drift-events`
-* `GET /api/projects/:ProjectId/alerts`
-* `POST /api/projects/:ProjectId/alert-configs`
-* `PUT /api/alert-configs/:Id`
-* `GET /api/projects/:ProjectId/dashboard`
-* `GET /api/projects/:ProjectId/report/pdf`
-* `GET /api/projects/:ProjectId/report/sarif`
-* `GET /api/assets/:Id/sbom/export?format=cyclonedx`
-* `WS /ws/projects/:ProjectId/live`
+* `GET /api/projects/:id`
+* `PUT /api/projects/:id`
+* `DELETE /api/projects/:id`
+* `GET /api/projects/:projectId/assets`
+* `POST /api/projects/:projectId/assets`
+* `PUT /api/assets/:id`
+* `DELETE /api/assets/:id`
+* `POST /api/assets/:id/scan`
+* `GET /api/assets/:id/scan-results`
+* `GET /api/assets/:id/scan-results/latest`
+* `GET /api/assets/:id/drift-events`
+* `GET /api/projects/:projectId/dashboard`
+* `GET /api/projects/:projectId/alerts`
 
 ## Deliverables
 
-* Complete frontend and backend source code.
-* SQLAlchemy models, Alembic migration, and seed data.
-* Docker Compose file for PostgreSQL, Neo4j, Redis, MinIO, backend, and frontend.
+* Complete Flutter app source code and FastAPI backend source code.
+* SQLAlchemy models, Alembic migrations, and seed data.
+* Docker Compose file for PostgreSQL and the backend.
 * `.env.example`.
-* README with installation, database migration, seed, frontend/backend startup, Docker usage, and external API/token configuration.
-* Ensure the application builds successfully and all basic CRUD plus manual scan/drift detection/alerting work end to end.
+* README with installation, database migration, seed, backend startup, Flutter app startup (emulator/device), Docker usage, and SMTP/OSV.dev configuration.
+* Widget tests covering the 6 required UI states for the Asset Management feature (per the P4 assignment).
+* Ensure the application builds successfully and the full flow (add asset → scan → view results → see drift on second scan → receive alert) works end to end with at least one seeded example.
 
 ## Project structure
 
-* Use a monorepo with a Python backend and a TypeScript frontend.
+* Use a two-folder monorepo: a Flutter app and a FastAPI backend, communicating over REST.
 * Structure:
 
 ```text
 pulse/
+  mobile/
+    lib/
+      main.dart
+      app.dart
+      routes/
+        app_router.dart
+      features/
+        auth/
+        project/
+        asset_management/
+          data/
+          application/
+          presentation/
+      widgets/
+      models/
+      services/
+        api_client.dart
+    test/
   backend/
     app/
       api/
@@ -343,27 +278,17 @@ pulse/
       models/
       schemas/
       services/
-      workers/
     alembic/
     tests/
-  frontend/
-    src/
-      app/
-      components/
-      lib/
-      hooks/
-    public/
   docs/
     architecture/
+    PROPOSAL.md
   docker-compose.yml
   .env.example
 ```
 
-## Shared contract requirements
+## API contract requirements
 
-* Because the backend is Python and the frontend is TypeScript, domain models cannot be shared as a single source file the way a TypeScript-only monorepo would.
-* FastAPI's auto-generated OpenAPI schema is the single source of truth for the API contract.
-* Generate a typed frontend client from the OpenAPI schema (for example with `openapi-typescript`) into `frontend/src/lib/api-types.ts` instead of hand-writing duplicate interfaces.
-* Do not hand-duplicate request/response shapes between `backend/app/schemas` (Pydantic) and the frontend; regenerate the typed client whenever the backend schema changes.
-* SQLAlchemy models remain backend-only; the API layer always maps them to Pydantic response schemas before returning data.
-* Enums that matter on both sides (`RiskStatus`, `DriftEventType`, `AlertChannelType`, `AssetType`, `SbomFormat`) must be defined once in `backend/app/schemas` and exposed through the generated OpenAPI client, not redefined by hand in the frontend.
+* The backend is Python and the mobile app is Dart, so there is no single shared source file for models — the API contract is defined once via FastAPI's Pydantic schemas and documented through its auto-generated OpenAPI spec at `/docs`.
+* Do not hand-duplicate field names/casing between backend Pydantic schemas and Flutter model classes; keep both aligned to the same field names as defined in this document (`AssetId`, `RiskStatus`, etc. at the API boundary, mapped to idiomatic Dart naming inside the app).
+* Enums that matter on both sides (`RiskStatus`, `DriftEventType`) must be defined once in `backend/app/schemas` and mirrored as Dart enums in `mobile/lib/models`, kept in sync manually since no codegen step is used in this version.

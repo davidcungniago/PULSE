@@ -1,172 +1,139 @@
 # 🔍 Pulse
 
-### Continuous Supply Chain Integrity Monitor
+### Continuous Supply Chain Integrity Monitor — Mobile Companion
 
-**Platform monitoring integritas rantai pasok perangkat lunak berbasis SBOM (Software Bill of Materials) untuk deteksi dini ancaman supply chain.**
+**Aplikasi mobile pendamping bagi developer dan security engineer untuk memantau risiko rantai pasok perangkat lunak (SBOM & CVE) kapan pun, dari genggaman.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/yourusername/pulse/ci.yml?branch=main)](.github/workflows/ci.yml)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B.svg)](https://flutter.dev/)
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688.svg)](https://fastapi.tiangolo.com/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ---
 
 ## 📖 Daftar Isi
 
-- [Latar Belakang](#-latar-belakang)
-- [Apa yang Pulse Lakukan](#-apa-yang-pulse-lakukan)
-- [Fitur Utama](#-fitur-utama)
-- [Demo](#-demo)
+- [Deskripsi Masalah](#-deskripsi-masalah)
+- [Profil Target Pengguna](#-profil-target-pengguna)
+- [Manfaat Aplikasi](#-manfaat-aplikasi)
+- [Fitur Inti (MVP)](#-fitur-inti-mvp)
+- [Fitur yang Tidak Dikerjakan](#-fitur-yang-tidak-dikerjakan)
+- [Kriteria Keberhasilan](#-kriteria-keberhasilan)
 - [Arsitektur](#-arsitektur)
 - [Tech Stack](#-tech-stack)
 - [Memulai](#-memulai)
 - [Cara Pakai](#-cara-pakai)
-- [Roadmap](#-roadmap)
-- [Kontribusi](#-kontribusi)
 - [Lisensi](#-lisensi)
 - [Kontak](#-kontak)
 
 ---
 
-## 🧩 Latar Belakang
+## 🧩 Deskripsi Masalah
 
-Serangan siber modern semakin sering menyasar **rantai pasok perangkat lunak (software supply chain)**, bukan aplikasi secara langsung. Beberapa insiden nyata yang menjadi latar belakang proyek ini:
+Serangan siber modern semakin sering menyasar **rantai pasok perangkat lunak (software supply chain)**, bukan aplikasi secara langsung. Insiden seperti SolarWinds (2020), Log4Shell (2021), event-stream (2018), dan XZ Utils (2024) menunjukkan pola yang sama: sebuah komponen/dependency yang dipercaya disusupi, dan organisasi baru sadar setelah dampaknya meluas.
 
-| Insiden | Tahun | Dampak |
-|---|---|---|
-| **SolarWinds** | 2020 | Backdoor disusupkan ke build pipeline resmi → 18.000+ organisasi terdampak |
-| **Log4Shell** | 2021 | Satu library (`log4j`) dipakai jutaan aplikasi → krisis keamanan global |
-| **event-stream** | 2018 | Kontrol maintainer npm diserahkan ke pihak jahat → backdoor tersebar |
-| **XZ Utils** | 2024 | Backdoor ditanam oleh "kontributor tepercaya" selama 2 tahun sebelum terdeteksi |
+Masalah intinya:
 
-Masalah intinya: kebanyakan organisasi **tidak tahu persis komponen apa saja** yang ada di dalam software mereka, butuh waktu lama untuk menilai dampak CVE baru, dan **tidak ada yang memantau perubahan dependensi** dari waktu ke waktu — sehingga serangan seperti SolarWinds bisa lolos tanpa terdeteksi.
+- Developer dan security engineer sering **tidak tahu secara real-time** apakah ada CVE kritis baru yang mempengaruhi proyek mereka, karena mereka harus membuka dashboard/tool secara manual di laptop.
+- Ketika ada **dependensi baru yang muncul tanpa tercatat** (potensi supply chain attack) atau CVE kritis dipublikasikan, tidak ada cara cepat untuk mengetahuinya saat sedang tidak di depan komputer.
+- Tools SBOM/CVE yang ada (Syft, Grype, Snyk, Dependabot) semuanya berbasis web/CLI — tidak ada cara ringan untuk memantau status keamanan proyek dari HP saat bepergian, di sela rapat, atau di luar jam kerja.
 
-## 💡 Apa yang Pulse Lakukan
+## 👤 Profil Target Pengguna
 
-Pulse mengumpulkan **SBOM** dari berbagai sumber (repo Git, container image, upload manual), menganalisis risiko tiap komponen secara multi-dimensi (bukan cuma CVE), memantau **drift** dependensi secara berkelanjutan, dan memvisualisasikan seluruh rantai pasok dalam graf interaktif — lengkap dengan alert dini dan laporan kepatuhan untuk audit.
+**Persona utama: Developer / Security Engineer sebagai "on-the-go monitor"**
 
-Pulse dirancang sebagai **orkestrator** di atas tools open-source yang sudah teruji (Syft, Grype, OSV.dev, NVD), mengisi celah yang belum ada di tools open-source manapun secara terintegrasi: kombinasi **drift detection + analisis risiko multi-dimensi + visualisasi graf**, sepenuhnya gratis dan self-hosted.
+- Sudah punya alat utama (dashboard web/CI-CD) untuk kerja detail sehari-hari.
+- Butuh **companion app di HP** untuk cek cepat: "apakah project saya aman hari ini?", tanpa perlu membuka laptop.
+- Ingin memicu scan manual dan melihat notifikasi/alert penting langsung dari genggaman, bukan melakukan analisis mendalam di mobile.
+- Terbiasa dengan UI mobile modern: list, card, badge status, form sederhana — bukan visualisasi kompleks (graf interaktif, dashboard multi-panel).
 
-| Aspek | Dependabot | Snyk | Syft/Grype | **Pulse** |
-|---|:---:|:---:|:---:|:---:|
-| SBOM Generation | ❌ | ✅ | ✅ | ✅ |
-| CVE Scan | ✅ | ✅ | ✅ | ✅ |
-| License Analysis | ❌ | ⚠️ | ❌ | ✅ |
-| **Drift Detection** | ❌ | ❌ | ❌ | **✅** |
-| Visual Graph | ❌ | ⚠️ | ❌ | ✅ |
-| Blast Radius | ❌ | ❌ | ❌ | ✅ |
-| Open Source | ❌ | ❌ | ✅ | ✅ |
-| Self-hosted | ❌ | ❌ | ✅ | ✅ |
+Pulse versi mobile **tidak** menyasar CISO/auditor yang butuh laporan kepatuhan mendalam (PDF/SARIF) sebagai pengguna utama — itu tetap relevan untuk versi web/dashboard di masa depan, tapi bukan fokus rilis pertama ini.
 
----
+## 💡 Manfaat Aplikasi
 
-## ✨ Fitur Utama
+- **Visibilitas cepat**: developer bisa tahu status risiko semua project dalam hitungan detik, dari HP.
+- **Deteksi dini tanpa harus standby di laptop**: alert dikirim begitu ada CVE kritis baru atau drift dependensi mencurigakan.
+- **Kontrol manual, bukan otomatis membabi buta**: scan hanya berjalan saat pengguna menekan tombol, sehingga pengguna tetap punya kendali penuh dan biaya API eksternal (OSV.dev) tetap terkendali.
+- **Onboarding ringan**: tidak perlu setup rumit — cukup tambahkan repo, tekan scan, lihat hasil.
 
-**📦 Manajemen Proyek & Aset**
-- Multi-project, multi-aset (repo Git, container image, SBOM vendor)
-- Role-based access control: Admin, Security Engineer, Developer, Viewer
+## ✨ Fitur Inti (MVP)
 
-**📥 Ingesti SBOM**
-- Upload manual (CycloneDX JSON/XML, SPDX JSON/tag-value)
-- Integrasi Git (GitHub/GitLab) — auto-scan `package.json`, `requirements.txt`, `go.mod`, `pom.xml`, `Cargo.toml`
-- Scan container image via Syft
-- API endpoint untuk integrasi CI/CD
+1. **Manajemen Proyek & Aset** — CRUD project, tambah aset berupa URL repository Git.
+2. **Scan Manual** — tombol "Pindai Sekarang" memicu backend men-generate SBOM (via Syft) dan mengecek CVE ke OSV.dev secara sinkron.
+3. **Daftar Risiko per Komponen** — tabel flat berisi nama komponen, versi, lisensi, dan severity CVE tertinggi.
+4. **Drift Detection Sederhana** — bandingkan hasil scan terbaru dengan scan sebelumnya per aset; tandai komponen yang baru muncul, hilang, atau berubah versi.
+5. **Dashboard Ringkas** — jumlah aset, jumlah komponen, jumlah CVE kritis, aset dengan drift terbaru.
+6. **Alert Satu Channel (Email)** — kirim notifikasi saat scan menemukan CVE kritis baru atau drift.
+7. **Autentikasi Sederhana** — login single-user/JWT dasar (tanpa role-based access kompleks di MVP).
 
-**🔬 Analisis Risiko Multi-Dimensi**
-- CVE lookup (OSV.dev + NVD API)
-- Deteksi lisensi berisiko
-- Deteksi abandonware (tidak update > 24 bulan)
-- Dependency confusion risk (Levenshtein distance)
-- Skor popularitas & maintenance
-- Analisis blast radius
+## 🚧 Fitur yang Tidak Dikerjakan
 
-**🔄 Continuous Monitoring & Drift Detection**
-- Re-scan terjadwal (1 jam / 6 jam / harian / mingguan)
-- SBOM diff antar waktu scan
-- Deteksi dependensi baru, versi berubah, atau hilang tanpa tercatat
-- Auto-cek CVE baru terhadap aset yang sudah ada
+Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja tidak dikerjakan dulu:
 
-**🕸️ Visualisasi Graf Interaktif**
-- Graf dependensi dengan color-coding risiko
-- Panel detail per komponen
-- Filter berdasarkan level risiko/ekosistem
-- Blast radius view per CVE
+- Visualisasi graf dependensi interaktif — diganti tabel flat.
+- Multi-channel alert (Telegram/Slack/Discord) — hanya email di MVP.
+- Integrasi NVD API dan CISA KEV feed — hanya OSV.dev.
+- Export laporan PDF/SARIF/compliance report.
+- Scheduled/otomatis re-scan (Celery Beat) — scan hanya manual via tombol.
+- Graph database (Neo4j) — relasi dependensi disimpan flat di PostgreSQL.
+- Role-based access control multi-role (Admin/Security Engineer/Developer/Viewer) — cukup satu jenis user login.
+- Container image scanning — fokus hanya repository Git (package.json, requirements.txt, dll) di MVP.
+- Dependency confusion detection & abandonware scoring — kandidat fase berikutnya jika waktu tersisa.
 
-**🔔 Alert & Notifikasi**
-- Email, Telegram, Slack, Discord
-- Deduplikasi alert dalam time window
+## ✅ Kriteria Keberhasilan
 
-**📄 Laporan & Ekspor**
-- Compliance report (PDF)
-- Export SBOM (CycloneDX/SPDX)
-- Export SARIF untuk integrasi tools lain
-- Export CSV/JSON
-
-> 🧪 **Fase 2 (Nice-to-have):** integrasi CI/CD, PR bot otomatis, Policy-as-Code, multi-tenant, CISA KEV feed, SLSA level check, dukungan VEX.
-
----
-
-## 🖼️ Demo
-
-> 📸 *Screenshot dan demo akan ditambahkan di sini setelah aplikasi selesai dikembangkan.*
-
-| Dashboard | Graf Dependensi | Blast Radius |
-|---|---|---|
-| `docs/images/dashboard-placeholder.png` | `docs/images/graph-placeholder.png` | `docs/images/blast-radius-placeholder.png` |
+- [ ] Pengguna bisa membuat project dan menambahkan minimal satu aset (repo Git) dari aplikasi Flutter.
+- [ ] Tombol "Pindai Sekarang" berhasil memicu backend men-generate SBOM dan mengembalikan daftar komponen + CVE dari OSV.dev.
+- [ ] Hasil scan tersimpan permanen (tidak pernah menimpa/menghapus histori scan sebelumnya).
+- [ ] Scan kedua pada aset yang sama berhasil mendeteksi dan menampilkan minimal satu jenis drift (komponen baru/hilang/berubah versi) menggunakan data uji.
+- [ ] Dashboard menampilkan ringkasan yang akurat sesuai data di database (bukan hasil hardcode).
+- [ ] Notifikasi email terkirim saat ditemukan CVE kritis baru pada suatu scan.
+- [ ] Aplikasi Flutter menangani seluruh 6 kondisi UI wajib (loading awal, data berhasil dimuat, empty state, error state + retry, validasi form, loading saat submit) pada minimal fitur Asset Management.
+- [ ] Aplikasi dapat di-build dan dijalankan end-to-end (backend via Docker Compose, Flutter app di emulator/device) oleh orang lain mengikuti instruksi di bawah.
 
 ---
 
 ## 🏗️ Arsitektur
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    FRONTEND (Next.js/React)                 │
-│  Dashboard · Graf Visualisasi · Alert Config · Report       │
-└──────────────────────────┬──────────────────────────────────┘
-                            │ HTTPS / WebSocket
-┌──────────────────────────▼──────────────────────────────────┐
-│                  API GATEWAY (Nginx / Traefik)               │
-└──────────────────────────┬──────────────────────────────────┘
-                            │
-┌──────────────────────────▼──────────────────────────────────┐
-│                  BACKEND (FastAPI - Python)                  │
-│  Auth API │ Project API │ SBOM API │ Alert API               │
-└──────┬──────────────────────────────────────────┬────────────┘
-       │                                           │
-┌──────▼────────────┐                  ┌───────────▼──────────┐
-│  TASK QUEUE        │                  │  DATABASE            │
-│  (Celery + Redis)  │                  │  PostgreSQL (meta)   │
-│  Worker: Scan       │                  │  Neo4j (graf)        │
-│  Worker: Analyze    │                  │  Redis (cache)       │
-│  Worker: Alert      │                  └───────────────────────┘
-└──────┬────────────┘
-       │
-┌──────▼──────────────────────────────────────────────────────┐
-│           EXTERNAL TOOLS & API (Gratis)                      │
-│  Syft · Grype · OSV.dev · NVD API · GitHub API                │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────┐
+│   FLUTTER APP (mobile)       │
+│  Login · Dashboard · Assets  │
+│  Scan Result · Alerts        │
+└───────────────┬───────────────┘
+                │ HTTPS (REST)
+┌───────────────▼───────────────┐
+│   BACKEND (FastAPI - Python)  │
+│  Auth · Project · Asset ·     │
+│  Scan (sync) · Dashboard      │
+└───────────────┬───────────────┘
+                │
+┌───────────────▼───────────────┐
+│   PostgreSQL (single DB)      │
+└────────────────────────────────┘
+                │
+┌───────────────▼───────────────┐
+│   EXTERNAL TOOLS (Gratis)     │
+│   Syft · OSV.dev · SMTP       │
+└────────────────────────────────┘
 ```
 
-Detail arsitektur lengkap, skema data, dan API contract ada di [`docs/architecture/`](docs/architecture/).
+Detail arsitektur lengkap, skema data, dan API contract ada di [`docs/architecture/Architecture.md`](docs/architecture/Architecture.md).
 
 ---
 
 ## 🛠️ Tech Stack
 
-**Backend:** Python 3.11+ · FastAPI · SQLAlchemy 2.0 · Alembic · Celery · Redis · Pydantic · JWT (python-jose)
+**Mobile:** Flutter · Riverpod (state management) · go_router · dio
 
-**Frontend:** Next.js 14 (App Router) · TypeScript · Tailwind CSS · shadcn/ui · Cytoscape.js · TanStack Query · Zustand
+**Backend:** Python 3.11+ · FastAPI · SQLAlchemy 2.0 · Alembic · Pydantic · JWT
 
-**Database & Storage:** PostgreSQL 16 · Neo4j Community (graf dependensi) · Redis 7 · MinIO (opsional)
+**Database:** PostgreSQL 16
 
-**Security Tools (open-source):** Syft (SBOM generation) · Grype / Trivy (vulnerability scan)
+**Security Tools (open-source):** Syft (SBOM generation) · OSV.dev API (CVE lookup)
 
-**External APIs (gratis):** OSV.dev · NVD API · CISA KEV · GitHub API · npm/PyPI/Maven registry
-
-**DevOps:** Docker & Docker Compose · GitHub Actions · Nginx/Traefik
+**DevOps:** Docker & Docker Compose
 
 ---
 
@@ -175,87 +142,50 @@ Detail arsitektur lengkap, skema data, dan API contract ada di [`docs/architectu
 ### Prasyarat
 
 - [Docker](https://www.docker.com/) & Docker Compose
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x) + emulator atau device
 - Git
 
-### Instalasi
+### Backend
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/pulse.git
-cd pulse
+git clone https://github.com/davidcungniago/PULSE.git
+cd PULSE
 
 # 2. Salin file environment
 cp .env.example .env
-# Sesuaikan nilai di .env sesuai kebutuhan (SMTP, Telegram bot token, dsb.)
+# Isi kredensial SMTP untuk alert email
 
-# 3. Jalankan seluruh stack
+# 3. Jalankan PostgreSQL & backend
 docker compose up -d --build
 
-# 4. Jalankan migrasi database
+# 4. Jalankan migrasi & seed data
 docker compose exec backend alembic upgrade head
+docker compose exec backend python -m app.seed
 
-# 5. Buka aplikasi
-# Frontend : http://localhost:3000
-# API docs : http://localhost:8000/docs
+# API docs tersedia di: http://localhost:8000/docs
 ```
 
-### Menjalankan secara lokal (tanpa Docker, untuk development)
+### Mobile App
 
 ```bash
-# Backend
-cd backend
-python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-
-# Frontend
-cd frontend
-npm install
-npm run dev
+cd mobile
+flutter pub get
+flutter run
+# Pastikan API_BASE_URL di konfigurasi mobile mengarah ke backend (mis. http://10.0.2.2:8000 untuk emulator Android)
 ```
 
 ---
 
 ## 📘 Cara Pakai
 
-1. **Buat akun & login** melalui halaman `/register`.
-2. **Buat project baru**, misal "E-Commerce Backend".
-3. **Tambahkan aset** — hubungkan repo GitHub, masukkan nama container image, atau upload file SBOM manual.
-4. Pulse akan otomatis men-generate/mem-parsing SBOM dan menjalankan analisis risiko (CVE, lisensi, abandonware, dsb).
-5. Pantau **dashboard** dan **graf dependensi** untuk melihat status risiko tiap komponen.
-6. Atur **channel alert** (email/Telegram/Slack) di halaman konfigurasi project.
-7. Saat ada CVE baru atau drift terdeteksi, Pulse mengirim notifikasi otomatis.
-8. Unduh **laporan kepatuhan** (PDF/SARIF) untuk keperluan audit.
-
----
-
-## 🗺️ Roadmap
-
-| Minggu | Fokus | Deliverable |
-|---|---|---|
-| 1–2 | Riset & desain | Proposal, wireframe, ERD, arsitektur |
-| 3–4 | Backend core | Auth, project CRUD, setup database |
-| 5–6 | SBOM ingest | Parser CycloneDX/SPDX, integrasi Syft |
-| 7 | Vulnerability analysis | Integrasi OSV.dev, NVD, Grype |
-| 8 | Drift detection | SBOM diff engine, alert |
-| 9 | Frontend dashboard | Next.js + shadcn/ui |
-| 10 | Visualisasi graf | Cytoscape.js + blast radius view |
-| 11 | Alert & Report | Email/Telegram, PDF, SARIF |
-| 12 | Testing & dokumentasi | Unit test, README, video demo |
-
-Rencana Fase 2: integrasi CI/CD, PR bot otomatis, Policy-as-Code, multi-tenant, dukungan VEX & SLSA level check.
-
----
-
-## 🤝 Kontribusi
-
-Kontribusi sangat terbuka! Silakan baca [`CONTRIBUTING.md`](CONTRIBUTING.md) untuk panduan lengkap. Alur singkatnya:
-
-1. Fork repository ini
-2. Buat branch baru (`git checkout -b fitur/nama-fitur`)
-3. Commit perubahan (`git commit -m 'feat: tambah fitur X'`)
-4. Push ke branch (`git push origin fitur/nama-fitur`)
-5. Buka Pull Request
+1. **Register/Login** di aplikasi Flutter.
+2. **Buat project baru**, misal "Backend E-Commerce".
+3. **Tambahkan aset** — masukkan URL repository Git.
+4. Tekan **"Pindai Sekarang"** — backend men-generate SBOM dan mengecek CVE.
+5. Lihat **daftar komponen & CVE** dari hasil scan.
+6. Scan ulang di lain waktu untuk melihat **drift** — komponen baru/hilang/berubah versi.
+7. Jika ditemukan CVE kritis atau drift, kamu akan menerima **email alert** otomatis.
 
 ---
 
@@ -269,7 +199,7 @@ Proyek ini menggunakan lisensi **MIT** — lihat file [`LICENSE`](LICENSE) untuk
 
 **Author:** David Cungniago
 **Email:** david.cungniago@student.pradita.ac.id
-**GitHub:** [@davidcungniago](https://github.com/yourusername)
+**GitHub:** [@davidcungniago](https://github.com/davidcungniago)
 
 > Proyek ini dikembangkan sebagai Tugas Akhir mata kuliah *Uji Penetrasi Sistem Jaringan Keamanan* dan portofolio cyber security.
 
