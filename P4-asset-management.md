@@ -19,8 +19,8 @@ Seluruh fitur ini dibangun menggunakan Codex (agentic coding assistant), dengan 
 ### Prompt 1 — Implementasi awal fitur Asset Management
 
 ![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
+![alt text](assets/images/image-1.png)
+![alt text](assets/images/image-2.png)
 Build the initial Flutter project structure and UI prototype for an app named Pulse, a mobile companion for developers/security engineers to monitor software supply chain risk (SBOM/CVE scanning).
 prototype pass : screens can use mock/ hardened data for now, no real API writing is requiredyet except for a thin service layer with placeholder implementations.
 
@@ -104,7 +104,7 @@ Requirements:
 
 ### Prompt 2 — Perbaikan bug compile (missing parenthesis)
 
-![alt text](image-3.png)
+![alt text](assets/images/image-3.png)
 The Flutter test suite fails to compile with these errors:
 
 1. lib/features/asset_management/presentation/widgets/add_asset_form.dart:27:20
@@ -120,7 +120,7 @@ Fix both:
 2. In asset_list_screen_test.dart, declare a top-level constant, e.g. `const projectId = 'project-1';`, near the top of the file, and make sure every asset/test fixture that references a project id uses this same constant consistently.
 
 ### Prompt 3 — Perbaikan test yang gagal (2 dari 6 kondisi)
-![alt text](image-4.png)
+![alt text](assets/images/image-4.png)
 The Flutter widget test suite now compiles, but 2 of 6 tests fail:
 
 1. Test: "menampilkan daftar aset saat data tersedia" (line ~24)
@@ -146,7 +146,7 @@ Three fixes needed in the Pulse Flutter app:
 
 After these three fixes, run flutter analyze and flutter test and show me the full output confirming nothing is broken
 ## 3. Hasil Widget Test
-![alt text](image-5.png)
+![alt text](assets/images/image-5.png)
 Dijalankan dengan:
 
 ```bash
@@ -155,18 +155,18 @@ flutter test test/features/asset_management/asset_list_screen_test.dart
 
 Screenshot hasil akhir (semua PASS):
 
-![alt text](image-6.png)
+![alt text](assets/images/image-6.png)
 
 ## 4. Bukti Enam Kondisi UI
 
 | # | Kondisi | Screenshot | Catatan |
 |---|---|---|---|
-| 1 | Initial loading | ![alt text](image-8.png)| Ditampilkan saat pertama kali membuka layar Asset Management, sebelum data dimuat. |
-| 2 | Data berhasil dimuat | ![alt text](image-9.png) | Daftar aset (API Utama, Aplikasi Web) tampil dengan badge status. |
-| 3 | Empty state | ![alt text](image-11.png) | Ditampilkan saat project belum memiliki aset. |
-| 4 | Error state + tombol retry | ![alt text](image-12.png) | Muncul saat pengambilan data gagal; tombol "Coba Lagi" memicu pengambilan ulang. |
-| 5 | Validasi input form |![alt text](image-10.png)| Field URL repositori kosong/tidak valid menampilkan pesan error dan menonaktifkan tombol submit. |
-| 6 | Loading saat submit (tombol nonaktif) | ![alt text](image-13.png) | Tombol "Tambah Aset" menampilkan spinner dan tidak bisa ditekan ulang selama proses submit berlangsung. |
+| 1 | Initial loading | ![alt text](assets/images/image-8.png)| Ditampilkan saat pertama kali membuka layar Asset Management, sebelum data dimuat. |
+| 2 | Data berhasil dimuat | ![alt text](assets/images/image-9.png) | Daftar aset (API Utama, Aplikasi Web) tampil dengan badge status. |
+| 3 | Empty state | ![alt text](assets/images/image-11.png) | Ditampilkan saat project belum memiliki aset. |
+| 4 | Error state + tombol retry | ![alt text](assets/images/image-12.png) | Muncul saat pengambilan data gagal; tombol "Coba Lagi" memicu pengambilan ulang. |
+| 5 | Validasi input form |![alt text](assets/images/image-10.png)| Field URL repositori kosong/tidak valid menampilkan pesan error dan menonaktifkan tombol submit. |
+| 6 | Loading saat submit (tombol nonaktif) | ![alt text](assets/images/image-13.png) | Tombol "Tambah Aset" menampilkan spinner dan tidak bisa ditekan ulang selama proses submit berlangsung. |
 
 *(Kondisi 1, 3, 4, dan 6 diambil menggunakan debug toggle "Mode Demo (Debug)" yang sengaja ditambahkan sementara di `asset_list_screen.dart` untuk memaksa state tertentu — dihapus sebelum submission final.)*
 
