@@ -18,7 +18,6 @@
 - [Profil Target Pengguna](#-profil-target-pengguna)
 - [Manfaat Aplikasi](#-manfaat-aplikasi)
 - [Fitur Inti (MVP)](#-fitur-inti-mvp)
-- [Fitur yang Tidak Dikerjakan](#-fitur-yang-tidak-dikerjakan)
 - [Kriteria Keberhasilan](#-kriteria-keberhasilan)
 - [Arsitektur](#-arsitektur)
 - [Tech Stack](#-tech-stack)
