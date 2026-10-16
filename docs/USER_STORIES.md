@@ -40,7 +40,7 @@ Sebagai developer, saya ingin melihat daftar komponen hasil pemindaian terakhir 
 **Acceptance criteria**
 
 1. Setiap komponen menampilkan nama, versi, lisensi (atau "Tidak diketahui"), dan severity CVE tertinggi.
-2. Daftar diurutkan dari severity tertinggi: Kritis, Tinggi, Sedang, Rendah, lalu tanpa CVE.
+2. Daftar diurutkan dari severity tertinggi: Kritis, Tinggi, Sedang, Rendah, Tidak diketahui, lalu tanpa CVE.
 3. Komponen tanpa CVE ditampilkan dengan status aman.
 4. Aset yang belum pernah dipindai menampilkan empty state dengan ajakan untuk memindai.
 5. Severity ditampilkan dengan widget `StatusBadge` yang sama di seluruh aplikasi.
