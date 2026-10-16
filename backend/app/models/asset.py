@@ -8,6 +8,7 @@ from app.db.base import Base, new_uuid, utcnow
 
 if TYPE_CHECKING:
     from app.models.project import Project
+    from app.models.scan_result import ScanResult
 
 
 class Asset(Base):
@@ -31,3 +32,6 @@ class Asset(Base):
     )
 
     project: Mapped["Project"] = relationship(back_populates="assets")
+    scan_results: Mapped[list["ScanResult"]] = relationship(
+        back_populates="asset", cascade="all, delete-orphan"
+    )

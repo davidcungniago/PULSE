@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     cors_origins: str = ""
     cors_origin_regex: str = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
     demo_email: str = "demo@pulse.local"
+    github_raw_base_url: str = "https://raw.githubusercontent.com"
+    github_api_base_url: str = "https://api.github.com"
+    osv_base_url: str = "https://api.osv.dev"
+    scan_http_timeout_seconds: float = 15.0
+    manifest_max_bytes: int = 1024 * 1024
 
     @property
     def cors_origin_list(self) -> list[str]:

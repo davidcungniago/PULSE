@@ -1,0 +1,12 @@
+{
+  "aliases": [
+    "CVE-2019-0000"
+  ],
+  "database_specific": {
+    "severity": "CRITICAL"
+  },
+  "details": "This record has been withdrawn.",
+  "id": "GHSA-withdrawn-example",
+  "summary": "Withdrawn advisory example",
+  "withdrawn": "2020-01-01T00:00:00Z"
+}

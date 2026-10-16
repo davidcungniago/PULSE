@@ -1,0 +1,25 @@
+{
+  "aliases": [
+    "CVE-2021-23337",
+    "CVE-2026-4800",
+    "GHSA-35jh-r3h4-6jhm"
+  ],
+  "database_specific": {
+    "cwe_ids": [
+      "CWE-94"
+    ],
+    "github_reviewed": true,
+    "github_reviewed_at": "2026-04-01T23:51:12Z",
+    "nvd_published_at": "2026-03-31T20:16:29Z",
+    "severity": "HIGH"
+  },
+  "details": "### Impact\n\nThe fix for [CVE-2021-23337](https://github.com/advisories/GHSA-35jh-r3h4-6jhm) added validation for the `variable` option in `_.template` but did not apply the same validation to `options.imports` key names. Both paths flow into the same `Function()` constructor sink.\n\nWhen an applicati",
+  "id": "GHSA-r5fr-rjxr-66jc",
+  "severity": [
+    {
+      "score": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "type": "CVSS_V3"
+    }
+  ],
+  "summary": "lodash vulnerable to Code Injection via `_.template` imports key names"
+}
