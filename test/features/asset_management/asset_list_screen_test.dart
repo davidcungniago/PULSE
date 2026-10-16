@@ -8,6 +8,8 @@ import 'package:pulse/features/asset_management/data/asset_repository.dart';
 import 'package:pulse/features/asset_management/presentation/asset_list_screen.dart';
 import 'package:pulse/features/asset_management/presentation/widgets/add_asset_form.dart';
 import 'package:pulse/models/asset_model.dart';
+import 'package:pulse/services/api_client.dart';
+import 'package:pulse/services/asset_service.dart';
 
 const projectId = 'project-1';
 
@@ -105,6 +107,9 @@ Asset _asset() => Asset(
     lastScannedAt: DateTime(2026, 9, 26, 10));
 
 class FakeAssetRepository extends AssetRepository {
+  FakeAssetRepository()
+      : super(assetService: AssetService(client: ApiClient()));
+
   List<Asset> assets = [];
   bool shouldFail = false;
   Future<List<Asset>>? assetsFuture;
