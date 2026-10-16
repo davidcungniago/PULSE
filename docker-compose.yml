@@ -1,0 +1,43 @@
+x-backend-common: &backend-common
+  build: ./backend
+  ports:
+    - "8000:8000"
+  environment:
+    CORS_ORIGINS: ${CORS_ORIGINS:-*}
+
+services:
+  backend:
+    <<: *backend-common
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///./pulse.db}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+
+  db:
+    image: postgres:16
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: pulse
+      POSTGRES_PASSWORD: pulse
+      POSTGRES_DB: pulse
+    ports:
+      - "5432:5432"
+    volumes:
+      - pulse_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend-postgres:
+    <<: *backend-common
+    profiles: ["postgres"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://pulse:pulse@db:5432/pulse
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+
+volumes:
+  pulse_pgdata:
