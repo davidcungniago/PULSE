@@ -17,8 +17,12 @@ class StatusBadge extends StatelessWidget {
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: color.withOpacity(.14), borderRadius: BorderRadius.circular(999)),
-      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+      decoration: BoxDecoration(
+          color: color.withValues(alpha: .14),
+          borderRadius: BorderRadius.circular(999)),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontWeight: FontWeight.w700, fontSize: 12)),
     );
   }
 }

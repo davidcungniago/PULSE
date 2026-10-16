@@ -13,7 +13,8 @@ const projectId = 'project-1';
 
 void main() {
   testWidgets('menampilkan indikator saat aset sedang dimuat', (tester) async {
-    final repository = FakeAssetRepository()..assetsFuture = Completer<List<Asset>>().future;
+    final repository = FakeAssetRepository()
+      ..assetsFuture = Completer<List<Asset>>().future;
     await _pumpScreen(tester, repository);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
@@ -31,7 +32,8 @@ void main() {
     expect(find.text('Belum ada aset di project ini'), findsOneWidget);
   });
 
-  testWidgets('menampilkan error dan memuat ulang saat Coba Lagi ditekan', (tester) async {
+  testWidgets('menampilkan error dan memuat ulang saat Coba Lagi ditekan',
+      (tester) async {
     final repository = FakeAssetRepository()..shouldFail = true;
     await _pumpScreen(tester, repository);
     expect(find.text('Aset tidak dapat dimuat.'), findsOneWidget);
@@ -43,24 +45,30 @@ void main() {
     expect(find.text('API Utama'), findsOneWidget);
   });
 
-  testWidgets('menampilkan validasi inline untuk URL repositori tidak valid', (tester) async {
+  testWidgets('menampilkan validasi inline untuk URL repositori tidak valid',
+      (tester) async {
     final repository = FakeAssetRepository();
     await _pumpScreen(tester, repository);
     await tester.tap(find.text('Tambah Aset').first);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'https://contoh.com/repo');
+    await tester.enterText(
+        find.byType(TextFormField), 'https://contoh.com/repo');
     await tester.pump();
-    expect(find.text('Gunakan URL GitHub atau GitLab yang valid.'), findsOneWidget);
+    expect(find.text('Gunakan URL GitHub atau GitLab yang valid.'),
+        findsOneWidget);
     final submitButton = _addAssetSubmitButton();
     expect(tester.widget<FilledButton>(submitButton).onPressed, isNull);
   });
 
-  testWidgets('menonaktifkan submit dan menampilkan spinner saat aset dikirim', (tester) async {
-    final repository = FakeAssetRepository()..addFuture = Completer<Asset>().future;
+  testWidgets('menonaktifkan submit dan menampilkan spinner saat aset dikirim',
+      (tester) async {
+    final repository = FakeAssetRepository()
+      ..addFuture = Completer<Asset>().future;
     await _pumpScreen(tester, repository);
     await tester.tap(find.text('Tambah Aset').first);
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'https://github.com/pulse/api');
+    await tester.enterText(
+        find.byType(TextFormField), 'https://github.com/pulse/api');
     await tester.pump();
     final submitButton = _addAssetSubmitButton();
     await tester.tap(submitButton);
@@ -70,19 +78,31 @@ void main() {
   });
 }
 
-Future<void> _pumpScreen(WidgetTester tester, FakeAssetRepository repository) => tester.pumpWidget(
-      ProviderScope(
-        overrides: [assetRepositoryProvider.overrideWithValue(repository)],
-        child: const MaterialApp(home: AssetListScreen(projectId: projectId)),
-      ),
-    ).then((_) => tester.pump());
+Future<void> _pumpScreen(WidgetTester tester, FakeAssetRepository repository) =>
+    tester
+        .pumpWidget(
+          ProviderScope(
+            overrides: [assetRepositoryProvider.overrideWithValue(repository)],
+            child:
+                const MaterialApp(home: AssetListScreen(projectId: projectId)),
+          ),
+        )
+        .then((_) => tester.pump());
 
 Finder _addAssetSubmitButton() => find.descendant(
       of: find.byType(AddAssetForm),
       matching: find.byType(FilledButton),
     );
 
-Asset _asset() => Asset(id: 'asset-1', projectId: projectId, name: 'API Utama', repositoryUrl: 'https://github.com/pulse/api', owner: 'pulse', repositoryName: 'api', isActive: true, lastScannedAt: DateTime(2026, 9, 26, 10));
+Asset _asset() => Asset(
+    id: 'asset-1',
+    projectId: projectId,
+    name: 'API Utama',
+    repositoryUrl: 'https://github.com/pulse/api',
+    owner: 'pulse',
+    repositoryName: 'api',
+    isActive: true,
+    lastScannedAt: DateTime(2026, 9, 26, 10));
 
 class FakeAssetRepository extends AssetRepository {
   List<Asset> assets = [];

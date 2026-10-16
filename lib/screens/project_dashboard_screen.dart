@@ -24,7 +24,8 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
     setState(() => _isScanning = false);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pemindaian selesai (mode simulasi).')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pemindaian selesai (mode simulasi).')));
   }
 
   @override
@@ -32,7 +33,12 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ringkasan Proyek'),
-        actions: [IconButton(onPressed: () => context.push('/projects/${widget.projectId}/alerts'), icon: const Icon(Icons.notifications_outlined))],
+        actions: [
+          IconButton(
+              onPressed: () =>
+                  context.push('/projects/${widget.projectId}/alerts'),
+              icon: const Icon(Icons.notifications_outlined))
+        ],
       ),
       body: FutureBuilder(
         future: DashboardService().getDashboard(widget.projectId),
@@ -48,28 +54,51 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  RiskSummaryCard(value: '${data.totalAssets}', label: 'Total aset', icon: Icons.inventory_2_outlined),
-                  RiskSummaryCard(value: '${data.totalComponents}', label: 'Total komponen', icon: Icons.widgets_outlined),
-                  RiskSummaryCard(value: '${data.criticalVulnerabilities}', label: 'CVE kritis', icon: Icons.warning_amber_rounded),
-                  RiskSummaryCard(value: '${data.assetsWithDrift}', label: 'Aset dengan drift', icon: Icons.compare_arrows_outlined),
+                  RiskSummaryCard(
+                      value: '${data.totalAssets}',
+                      label: 'Total aset',
+                      icon: Icons.inventory_2_outlined),
+                  RiskSummaryCard(
+                      value: '${data.totalComponents}',
+                      label: 'Total komponen',
+                      icon: Icons.widgets_outlined),
+                  RiskSummaryCard(
+                      value: '${data.criticalVulnerabilities}',
+                      label: 'CVE kritis',
+                      icon: Icons.warning_amber_rounded),
+                  RiskSummaryCard(
+                      value: '${data.assetsWithDrift}',
+                      label: 'Aset dengan drift',
+                      icon: Icons.compare_arrows_outlined),
                 ],
               ),
               const SizedBox(height: 16),
-              PrimaryButton(label: 'Pindai Semua Aset', onPressed: _scanAllAssets, isLoading: _isScanning, icon: Icons.radar),
+              PrimaryButton(
+                  label: 'Pindai Semua Aset',
+                  onPressed: _scanAllAssets,
+                  isLoading: _isScanning,
+                  icon: Icons.radar),
               const SizedBox(height: 24),
               Text('Aset', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ...data.assets.map(
                 (asset) => Card(
                   child: ListTile(
-                    onTap: () => context.push('/projects/${widget.projectId}/scan-results/${asset.assetId}'),
+                    onTap: () => context.push(
+                        '/projects/${widget.projectId}/scan-results/${asset.assetId}'),
                     title: Text(asset.name),
-                    subtitle: Text(asset.lastScannedAt == null ? 'Belum pernah dipindai' : 'Dipindai ${asset.lastScannedAt!.hour.toString().padLeft(2, '0')}:${asset.lastScannedAt!.minute.toString().padLeft(2, '0')}'),
+                    subtitle: Text(asset.lastScannedAt == null
+                        ? 'Belum pernah dipindai'
+                        : 'Dipindai ${asset.lastScannedAt!.hour.toString().padLeft(2, '0')}:${asset.lastScannedAt!.minute.toString().padLeft(2, '0')}'),
                     trailing: StatusBadge(status: asset.status),
                   ),
                 ),
               ),
-              TextButton.icon(onPressed: () => context.push('/projects/${widget.projectId}/assets'), icon: const Icon(Icons.inventory_2_outlined), label: const Text('Kelola aset')),
+              TextButton.icon(
+                  onPressed: () =>
+                      context.push('/projects/${widget.projectId}/assets'),
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  label: const Text('Kelola aset')),
             ],
           );
         },

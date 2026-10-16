@@ -14,31 +14,40 @@ const bool _isAuthenticated = true;
 final GoRouter appRouter = GoRouter(
   initialLocation: '/projects',
   redirect: (context, state) {
-    final isAuthRoute = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+    final isAuthRoute = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/register';
     if (!_isAuthenticated && !isAuthRoute) return '/login';
     if (_isAuthenticated && isAuthRoute) return '/projects';
     return null;
   },
   routes: [
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-    GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-    GoRoute(path: '/projects', builder: (context, state) => const ProjectListScreen()),
+    GoRoute(
+        path: '/register', builder: (context, state) => const RegisterScreen()),
+    GoRoute(
+        path: '/projects',
+        builder: (context, state) => const ProjectListScreen()),
     GoRoute(
       path: '/projects/:id',
-      builder: (context, state) => ProjectDashboardScreen(projectId: state.pathParameters['id']!),
+      builder: (context, state) =>
+          ProjectDashboardScreen(projectId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/projects/:id/assets',
-      builder: (context, state) => AssetListScreen(projectId: state.pathParameters['id']!),
+      builder: (context, state) =>
+          AssetListScreen(projectId: state.pathParameters['id']!),
     ),
     GoRoute(
       path: '/projects/:id/scan-results/:assetId',
-      builder: (context, state) => ScanResultDetailScreen(assetId: state.pathParameters['assetId']!),
+      builder: (context, state) =>
+          ScanResultDetailScreen(assetId: state.pathParameters['assetId']!),
     ),
     GoRoute(
       path: '/projects/:id/alerts',
-      builder: (context, state) => AlertsScreen(projectId: state.pathParameters['id']!),
+      builder: (context, state) =>
+          AlertsScreen(projectId: state.pathParameters['id']!),
     ),
-    GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+    GoRoute(
+        path: '/profile', builder: (context, state) => const ProfileScreen()),
   ],
 );

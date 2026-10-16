@@ -1,5 +1,9 @@
 class Project {
-  const Project({required this.id, required this.name, required this.description, required this.createdAt});
+  const Project(
+      {required this.id,
+      required this.name,
+      required this.description,
+      required this.createdAt});
   final String id;
   final String name;
   final String description;
@@ -10,5 +14,10 @@ class Project {
         description: json['description'] as String? ?? '',
         createdAt: DateTime.parse(json['createdAt'] as String),
       );
-  Map<String, dynamic> toJson() => {'id': id, 'name': name, 'description': description, 'createdAt': createdAt.toIso8601String()};
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'description': description,
+        'createdAt': createdAt.toIso8601String()
+      };
 }

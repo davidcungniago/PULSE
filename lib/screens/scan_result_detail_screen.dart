@@ -15,7 +15,10 @@ class ScanResultDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Hasil Pemindaian')),
       body: FutureBuilder(
-        future: Future.wait([ScanService().getComponents(assetId), ScanService().getDriftEvents(assetId)]),
+        future: Future.wait([
+          ScanService().getComponents(assetId),
+          ScanService().getDriftEvents(assetId)
+        ]),
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const LoadingIndicator();
           final components = snapshot.data![0] as List;
@@ -30,12 +33,15 @@ class ScanResultDetailScreen extends StatelessWidget {
                   child: ListTile(
                     title: Text('${component.name} ${component.version}'),
                     subtitle: Text('Lisensi: ${component.license}'),
-                    trailing: StatusBadge(status: _statusForSeverity(_severityForComponent(component.name))),
+                    trailing: StatusBadge(
+                        status: _statusForSeverity(
+                            _severityForComponent(component.name))),
                   ),
                 ),
               ),
               const SizedBox(height: 24),
-              Text('Perubahan dependensi', style: Theme.of(context).textTheme.titleLarge),
+              Text('Perubahan dependensi',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ...driftEvents.map(
                 (event) => Card(

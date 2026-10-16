@@ -26,13 +26,18 @@ class AssetListScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          if (kDebugMode) _DemoModeControls(projectId: projectId, onShowSubmitting: () => _openAddAssetForm(context, showSubmitting: true)),
+          if (kDebugMode)
+            _DemoModeControls(
+                projectId: projectId,
+                onShowSubmitting: () =>
+                    _openAddAssetForm(context, showSubmitting: true)),
           Expanded(
             child: assets.when(
               loading: () => const LoadingIndicator(),
               error: (_, __) => ErrorState(
                 message: 'Aset tidak dapat dimuat.',
-                onRetry: () => ref.read(assetListProvider(projectId).notifier).refresh(),
+                onRetry: () =>
+                    ref.read(assetListProvider(projectId).notifier).refresh(),
               ),
               data: (items) => items.isEmpty
                   ? EmptyState(
@@ -44,7 +49,8 @@ class AssetListScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(16),
                       itemCount: items.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
-                      itemBuilder: (_, index) => AssetListItem(asset: items[index]),
+                      itemBuilder: (_, index) =>
+                          AssetListItem(asset: items[index]),
                     ),
             ),
           ),
@@ -53,7 +59,8 @@ class AssetListScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _openAddAssetForm(BuildContext context, {bool showSubmitting = false}) async {
+  Future<void> _openAddAssetForm(BuildContext context,
+      {bool showSubmitting = false}) async {
     if (showSubmitting) {
       final container = ProviderScope.containerOf(context);
       container.read(addAssetProvider(projectId).notifier).showDemoSubmitting();
@@ -68,7 +75,8 @@ class AssetListScreen extends ConsumerWidget {
 }
 
 class _DemoModeControls extends ConsumerWidget {
-  const _DemoModeControls({required this.projectId, required this.onShowSubmitting});
+  const _DemoModeControls(
+      {required this.projectId, required this.onShowSubmitting});
 
   final String projectId;
   final VoidCallback onShowSubmitting;
@@ -86,11 +94,18 @@ class _DemoModeControls extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             const Text('Mode Demo (Debug)'),
-            TextButton(onPressed: notifier.showDemoLoading, child: const Text('Memuat')),
-            TextButton(onPressed: notifier.showDemoEmpty, child: const Text('Kosong')),
-            TextButton(onPressed: notifier.showDemoError, child: const Text('Error')),
-            TextButton(onPressed: notifier.refresh, child: const Text('Data normal')),
-            TextButton(onPressed: onShowSubmitting, child: const Text('Form mengirim')),
+            TextButton(
+                onPressed: notifier.showDemoLoading,
+                child: const Text('Memuat')),
+            TextButton(
+                onPressed: notifier.showDemoEmpty, child: const Text('Kosong')),
+            TextButton(
+                onPressed: notifier.showDemoError, child: const Text('Error')),
+            TextButton(
+                onPressed: notifier.refresh, child: const Text('Data normal')),
+            TextButton(
+                onPressed: onShowSubmitting,
+                child: const Text('Form mengirim')),
           ],
         ),
       ),

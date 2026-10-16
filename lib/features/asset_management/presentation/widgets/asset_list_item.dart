@@ -13,6 +13,15 @@ class AssetListItem extends StatelessWidget {
     final lastSynced = scanned == null
         ? 'Belum pernah disinkronkan'
         : 'Terakhir disinkronkan ${scanned.day.toString().padLeft(2, '0')}/${scanned.month.toString().padLeft(2, '0')}/${scanned.year} ${scanned.hour.toString().padLeft(2, '0')}:${scanned.minute.toString().padLeft(2, '0')}';
-    return Card(child: ListTile(leading: const Icon(Icons.code), title: Text(asset.name), subtitle: Text('${asset.owner}/${asset.repositoryName}\n$lastSynced'), isThreeLine: true, trailing: StatusBadge(status: asset.isActive ? RiskStatus.active : RiskStatus.inactive)));
+    return Card(
+        child: ListTile(
+            leading: const Icon(Icons.code),
+            title: Text(asset.name),
+            subtitle:
+                Text('${asset.owner}/${asset.repositoryName}\n$lastSynced'),
+            isThreeLine: true,
+            trailing: StatusBadge(
+                status:
+                    asset.isActive ? RiskStatus.active : RiskStatus.inactive)));
   }
 }

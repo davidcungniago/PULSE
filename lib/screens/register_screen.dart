@@ -46,7 +46,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Buat Akun', style: Theme.of(context).textTheme.headlineMedium),
+                  Text('Buat Akun',
+                      style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 8),
                   const Text('Mulai memantau risiko proyek Anda.'),
                   const SizedBox(height: 32),

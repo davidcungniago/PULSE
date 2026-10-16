@@ -46,17 +46,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Pulse', style: Theme.of(context).textTheme.displaySmall),
+                    Text('Pulse',
+                        style: Theme.of(context).textTheme.displaySmall),
                     const SizedBox(height: 8),
-                    const Text('Pantau risiko rantai pasok perangkat lunak Anda.'),
+                    const Text(
+                        'Pantau risiko rantai pasok perangkat lunak Anda.'),
                     const SizedBox(height: 32),
                     AppTextField(
                       label: 'Email',
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) => value == null || !value.contains('@')
-                          ? 'Masukkan email yang valid.'
-                          : null,
+                      validator: (value) =>
+                          value == null || !value.contains('@')
+                              ? 'Masukkan email yang valid.'
+                              : null,
                     ),
                     const SizedBox(height: 16),
                     AppTextField(

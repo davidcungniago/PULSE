@@ -44,7 +44,8 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Tambah Aset', style: Theme.of(context).textTheme.headlineSmall),
+            Text('Tambah Aset',
+                style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             const Text('Masukkan URL repositori GitHub atau GitLab.'),
             const SizedBox(height: 20),
