@@ -1,13 +1,17 @@
+import 'date_time_utils.dart';
+
 class Asset {
-  const Asset(
-      {required this.id,
-      required this.projectId,
-      required this.name,
-      required this.repositoryUrl,
-      required this.owner,
-      required this.repositoryName,
-      required this.isActive,
-      this.lastScannedAt});
+  const Asset({
+    required this.id,
+    required this.projectId,
+    required this.name,
+    required this.repositoryUrl,
+    required this.owner,
+    required this.repositoryName,
+    required this.isActive,
+    this.lastScannedAt,
+  });
+
   final String id;
   final String projectId;
   final String name;
@@ -16,26 +20,28 @@ class Asset {
   final String repositoryName;
   final bool isActive;
   final DateTime? lastScannedAt;
+
   factory Asset.fromJson(Map<String, dynamic> json) => Asset(
-        id: json['id'] as String,
-        projectId: json['projectId'] as String,
-        name: json['name'] as String,
-        repositoryUrl: json['repositoryUrl'] as String,
-        owner: json['owner'] as String,
-        repositoryName: json['repositoryName'] as String,
-        isActive: json['isActive'] as bool,
-        lastScannedAt: json['lastScannedAt'] == null
+        id: json['Id'] as String,
+        projectId: json['ProjectId'] as String,
+        name: json['Name'] as String,
+        repositoryUrl: json['RepositoryUrl'] as String,
+        owner: json['Owner'] as String,
+        repositoryName: json['RepositoryName'] as String,
+        isActive: json['IsActive'] as bool,
+        lastScannedAt: json['LastScannedAt'] == null
             ? null
-            : DateTime.parse(json['lastScannedAt'] as String),
+            : parseUtcIso8601(json['LastScannedAt'] as String),
       );
+
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'projectId': projectId,
-        'name': name,
-        'repositoryUrl': repositoryUrl,
-        'owner': owner,
-        'repositoryName': repositoryName,
-        'isActive': isActive,
-        'lastScannedAt': lastScannedAt?.toIso8601String()
+        'Id': id,
+        'ProjectId': projectId,
+        'Name': name,
+        'RepositoryUrl': repositoryUrl,
+        'Owner': owner,
+        'RepositoryName': repositoryName,
+        'IsActive': isActive,
+        'LastScannedAt': lastScannedAt?.toUtc().toIso8601String(),
       };
 }

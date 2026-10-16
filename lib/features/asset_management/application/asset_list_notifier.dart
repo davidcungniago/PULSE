@@ -1,10 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/asset_model.dart';
+import '../../../services/api_client.dart';
+import '../../../services/asset_service.dart';
 import '../data/asset_repository.dart';
 
-final assetRepositoryProvider =
-    Provider<AssetRepository>((ref) => AssetRepository());
+final assetRepositoryProvider = Provider<AssetRepository>(
+  (ref) => AssetRepository(
+    assetService: AssetService(client: ref.watch(apiClientProvider)),
+  ),
+);
 
 final assetListProvider =
     AsyncNotifierProvider.family<AssetListNotifier, List<Asset>, String>(

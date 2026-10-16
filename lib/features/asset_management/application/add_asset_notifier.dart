@@ -1,5 +1,7 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../services/api_error_mapper.dart';
 import 'asset_list_notifier.dart';
 
 enum AddAssetStatus { idle, validating, submitting, success, failure }
@@ -66,6 +68,11 @@ class AddAssetNotifier extends FamilyNotifier<AddAssetState, String> {
           .addAsset(arg, repositoryUrl.trim());
       ref.read(assetListProvider(arg).notifier).refresh();
       state = const AddAssetState(status: AddAssetStatus.success);
+    } on DioException catch (error) {
+      state = AddAssetState(
+          status: AddAssetStatus.failure,
+          submitError: mapApiErrorToMessage(error),
+          isUrlValid: true);
     } catch (_) {
       state = const AddAssetState(
           status: AddAssetStatus.failure,

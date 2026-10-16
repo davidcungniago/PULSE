@@ -1,43 +1,29 @@
+import 'package:dio/dio.dart';
+
 import '../models/project_model.dart';
+import 'api_client.dart';
 
 class ProjectService {
+  ProjectService({required ApiClient client}) : _dio = client.dio;
+
+  final Dio _dio;
+
   Future<List<Project>> getProjects() async {
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    return [
-      Project(
-          id: 'project-1',
-          name: 'Platform Pembayaran',
-          description: 'Layanan backend utama.',
-          createdAt: DateTime(2026, 9, 1)),
-      Project(
-          id: 'project-2',
-          name: 'Portal Pelanggan',
-          description: 'Aplikasi web pelanggan.',
-          createdAt: DateTime(2026, 9, 10))
-    ];
+    final response = await _dio.get<List<dynamic>>('/api/projects');
+    final data = response.data ?? const [];
+    return data
+        .map((item) => Project.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
-  Future<Project> getProject(String id) async =>
-      (await getProjects()).firstWhere((project) => project.id == id,
-          orElse: () => Project(
-              id: id,
-              name: 'Proyek',
-              description: '',
-              createdAt: DateTime.now()));
-  Future<Project> createProject(
-          {required String name, required String description}) async =>
-      Project(
-          id: 'project-baru',
-          name: name,
-          description: description,
-          createdAt: DateTime.now());
-  Future<Project> updateProject(String id,
-          {required String name, required String description}) async =>
-      Project(
-          id: id,
-          name: name,
-          description: description,
-          createdAt: DateTime.now());
-  Future<void> deleteProject(String id) async =>
-      Future<void>.delayed(const Duration(milliseconds: 300));
+  Future<Project> createProject({
+    required String name,
+    required String description,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/api/projects',
+      data: {'Name': name, 'Description': description},
+    );
+    return Project.fromJson(response.data!);
+  }
 }

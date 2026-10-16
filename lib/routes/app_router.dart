@@ -2,10 +2,11 @@ import 'package:go_router/go_router.dart';
 
 import '../screens/alerts_screen.dart';
 import '../features/asset_management/presentation/asset_list_screen.dart';
+import '../features/project_management/presentation/project_list_screen.dart';
+import '../features/watchlist/presentation/watchlist_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/project_dashboard_screen.dart';
-import '../screens/project_list_screen.dart';
 import '../screens/register_screen.dart';
 import '../screens/scan_result_detail_screen.dart';
 
@@ -27,6 +28,9 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
         path: '/projects',
         builder: (context, state) => const ProjectListScreen()),
+    GoRoute(
+        path: '/watchlist',
+        builder: (context, state) => const WatchlistScreen()),
     GoRoute(
       path: '/projects/:id',
       builder: (context, state) =>
