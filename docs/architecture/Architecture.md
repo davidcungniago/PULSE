@@ -1,21 +1,23 @@
-Architecture.md: Build a full-stack mobile-companion application named **Pulse (Continuous Supply Chain Integrity Monitor)**.
+# Pulse — Architecture
+
+Build a full-stack mobile-companion application named **Pulse (Continuous Supply Chain Integrity Monitor)**.
 
 ## Purpose
 
-Give developers and security engineers a lightweight mobile companion to check the security status of their software projects on the go. The app lets the user add Git repositories, trigger a manual scan, view detected components and CVEs, see drift between scans, and receive an email alert when a critical CVE or suspicious drift is found. This is not a full compliance/auditing dashboard — that use case is explicitly out of scope for this version (see `docs/PROPOSAL.md`).
+Give developers and security engineers a lightweight mobile companion to check the security status of their software projects on the go. The app lets the user add Git repositories, trigger a manual scan, view detected components and CVEs, see drift between scans, and receive an email alert when a critical CVE or suspicious drift is found. This is not a full compliance/auditing dashboard — that use case is explicitly out of scope for this version.
 
 ## Use this stack
 
 * Mobile Frontend: Flutter + Riverpod (state management) + go_router (routing) + dio (HTTP client)
 * Backend: Python 3.11+ + FastAPI
-* Database: PostgreSQL 16 (single relational database — no graph database in this version)
+* Database: SQLite by default; PostgreSQL 16 optional via Docker Compose (single relational database — no graph database in this version)
 * ORM: SQLAlchemy 2.0 + Alembic (migrations)
 * API style: REST API (synchronous — no task queue/worker in this version)
-* SBOM Generation: Syft (invoked synchronously by the scan endpoint)
+* Manifest parsing: read `requirements.txt` and `package.json` from public GitHub repositories (via `raw.githubusercontent.com`) and parse them into components (invoked synchronously by the scan endpoint). Syft is not used. Known limitation: only pinned/baseline versions in the manifest are scanned (version ranges are not resolved), and component `License` is recorded as "Tidak diketahui".
 * Vulnerability Data Source: OSV.dev API only (no NVD, no CISA KEV in this version)
 * Alerting: Email (SMTP) only
 * Auth: JWT, single user role (no RBAC in this version)
-* Use Docker Compose for PostgreSQL and the backend
+* Use Docker Compose only to run PostgreSQL and the backend when PostgreSQL is desired; SQLite needs no Docker
 * Use `.env.example` for database URL, SMTP credentials, and JWT secret
 
 ## Code rules
@@ -108,7 +110,7 @@ Give developers and security engineers a lightweight mobile companion to check t
 * Never delete existing ScanResult, Component, or Vulnerability history.
 * Drift is computed by diffing the newest ScanResult's components against the immediately preceding ScanResult's components for the same Asset.
 * Update `Asset.LastScannedAt` after a successful scan.
-* Use Alembic migrations and seed one example user, one project, two assets (public repositories), and two ScanResults per asset (to demonstrate drift out of the box).
+* Use Alembic migrations and seed one example user, one project, and two assets (public repositories). Do not seed fake ScanResults — scan history is produced only by real scans triggered from the app.
 
 ## Backend features
 
@@ -128,7 +130,7 @@ Give developers and security engineers a lightweight mobile companion to check t
 4. Manual Scan
 
    * Endpoint to trigger a scan for one asset. Runs synchronously and returns the result in the same request/response cycle (no background worker).
-   * Steps: clone/read dependency manifest → run Syft to generate an SBOM → for each component, query OSV.dev for CVEs → persist a new ScanResult with its Components and Vulnerabilities → diff against the previous ScanResult to produce DriftEvents → if a critical CVE or drift is found, send an email alert and log it.
+   * Steps: fetch the dependency manifest (`requirements.txt` / `package.json`) from `raw.githubusercontent.com` → parse it into components (only pinned/baseline versions; `License` recorded as "Tidak diketahui") → for each component, query OSV.dev for CVEs → persist a new ScanResult with its Components and Vulnerabilities → diff against the previous ScanResult to produce DriftEvents → if a critical CVE or drift is found, send an email alert and log it.
    * Return a result containing:
 
      * AssetId
@@ -240,7 +242,7 @@ Give developers and security engineers a lightweight mobile companion to check t
 
 * Complete Flutter app source code and FastAPI backend source code.
 * SQLAlchemy models, Alembic migrations, and seed data.
-* Docker Compose file for PostgreSQL and the backend.
+* Optional Docker Compose file for PostgreSQL and the backend (default SQLite requires no Docker).
 * `.env.example`.
 * README with installation, database migration, seed, backend startup, Flutter app startup (emulator/device), Docker usage, and SMTP/OSV.dev configuration.
 * Widget tests covering the 6 required UI states for the Asset Management feature (per the P4 assignment).
@@ -248,47 +250,67 @@ Give developers and security engineers a lightweight mobile companion to check t
 
 ## Project structure
 
-* Use a two-folder monorepo: a Flutter app and a FastAPI backend, communicating over REST.
+* Use a two-part monorepo: a Flutter app at the repository root and a FastAPI backend in `backend/`, communicating over REST.
 * Structure:
 
 ```text
-pulse/
-  mobile/
-    lib/
-      main.dart
-      app.dart
-      routes/
-        app_router.dart
-      features/
-        auth/
-        project/
-        asset_management/
-          data/
-          application/
-          presentation/
-      widgets/
-      models/
-      services/
-        api_client.dart
-    test/
+PULSE/
+  lib/                      # Flutter app (repo root)
+    main.dart
+    app.dart
+    routes/
+      app_router.dart
+    screens/
+      login_screen.dart
+      register_screen.dart
+      project_list_screen.dart
+      project_dashboard_screen.dart
+      scan_result_detail_screen.dart
+      alerts_screen.dart
+      profile_screen.dart
+    widgets/
+      primary_button.dart
+      app_text_field.dart
+      status_badge.dart
+      risk_summary_card.dart
+      empty_state.dart
+      error_state.dart
+      loading_indicator.dart
+    models/
+    services/
+      api_client.dart
+    features/
+      asset_management/
+        data/
+        application/
+        presentation/
+  test/
+    features/
+      asset_management/
+        asset_list_screen_test.dart
   backend/
     app/
+      main.py
       api/
       core/
       models/
       schemas/
       services/
+      seed.py
     alembic/
     tests/
+    requirements.txt
+    Dockerfile
+    .env.example
   docs/
     architecture/
-    PROPOSAL.md
-  docker-compose.yml
-  .env.example
+    P4-asset-management.md
+  pubspec.yaml
+  docker-compose.yml        # optional (PostgreSQL)
 ```
 
 ## API contract requirements
 
 * The backend is Python and the mobile app is Dart, so there is no single shared source file for models — the API contract is defined once via FastAPI's Pydantic schemas and documented through its auto-generated OpenAPI spec at `/docs`.
 * Do not hand-duplicate field names/casing between backend Pydantic schemas and Flutter model classes; keep both aligned to the same field names as defined in this document (`AssetId`, `RiskStatus`, etc. at the API boundary, mapped to idiomatic Dart naming inside the app).
-* Enums that matter on both sides (`RiskStatus`, `DriftEventType`) must be defined once in `backend/app/schemas` and mirrored as Dart enums in `mobile/lib/models`, kept in sync manually since no codegen step is used in this version.
+* Enums that matter on both sides (`RiskStatus`, `DriftEventType`) must be defined once in `backend/app/schemas` and mirrored as Dart enums in `lib/models`, kept in sync manually since no codegen step is used in this version.

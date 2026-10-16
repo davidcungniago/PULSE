@@ -21,6 +21,7 @@
 - [Fitur yang Tidak Dikerjakan](#-fitur-yang-tidak-dikerjakan)
 - [Kriteria Keberhasilan](#-kriteria-keberhasilan)
 - [Arsitektur](#-arsitektur)
+- [Struktur Repository](#-struktur-repository)
 - [Tech Stack](#-tech-stack)
 - [Memulai](#-memulai)
 - [Cara Pakai](#-cara-pakai)
@@ -60,12 +61,14 @@ Pulse versi mobile **tidak** menyasar CISO/auditor yang butuh laporan kepatuhan 
 ## ✨ Fitur Inti (MVP)
 
 1. **Manajemen Proyek & Aset** — CRUD project, tambah aset berupa URL repository Git.
-2. **Scan Manual** — tombol "Pindai Sekarang" memicu backend men-generate SBOM (via Syft) dan mengecek CVE ke OSV.dev secara sinkron.
+2. **Scan Manual** — tombol "Pindai Sekarang" memicu backend memuat dan mem-parse manifest (`requirements.txt`, `package.json`) dari repo GitHub publik, lalu mengecek CVE ke OSV.dev secara sinkron.
 3. **Daftar Risiko per Komponen** — tabel flat berisi nama komponen, versi, lisensi, dan severity CVE tertinggi.
 4. **Drift Detection Sederhana** — bandingkan hasil scan terbaru dengan scan sebelumnya per aset; tandai komponen yang baru muncul, hilang, atau berubah versi.
 5. **Dashboard Ringkas** — jumlah aset, jumlah komponen, jumlah CVE kritis, aset dengan drift terbaru.
 6. **Alert Satu Channel (Email)** — kirim notifikasi saat scan menemukan CVE kritis baru atau drift.
 7. **Autentikasi Sederhana** — login single-user/JWT dasar (tanpa role-based access kompleks di MVP).
+
+> **Catatan keterbatasan pemindaian:** scan tidak memakai Syft, melainkan mem-parse manifest secara langsung. Hanya versi yang *pinned*/baseline pada manifest (`package.json`, `requirements.txt`) yang dipindai — range versi (mis. `^1.2.0`, `>=2,<3`) tidak di-resolve ke versi konkret. Karena itu field lisensi komponen ditampilkan sebagai **"Tidak diketahui"**.
 
 ## 🚧 Fitur yang Tidak Dikerjakan
 
@@ -76,7 +79,7 @@ Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja
 - Integrasi NVD API dan CISA KEV feed — hanya OSV.dev.
 - Export laporan PDF/SARIF/compliance report.
 - Scheduled/otomatis re-scan (Celery Beat) — scan hanya manual via tombol.
-- Graph database (Neo4j) — relasi dependensi disimpan flat di PostgreSQL.
+- Graph database (Neo4j) — relasi dependensi disimpan flat di database relasional (SQLite/PostgreSQL).
 - Role-based access control multi-role (Admin/Security Engineer/Developer/Viewer) — cukup satu jenis user login.
 - Container image scanning — fokus hanya repository Git (package.json, requirements.txt, dll) di MVP.
 - Dependency confusion detection & abandonware scoring — kandidat fase berikutnya jika waktu tersisa.
@@ -84,13 +87,13 @@ Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja
 ## ✅ Kriteria Keberhasilan
 
 - [ ] Pengguna bisa membuat project dan menambahkan minimal satu aset (repo Git) dari aplikasi Flutter.
-- [ ] Tombol "Pindai Sekarang" berhasil memicu backend men-generate SBOM dan mengembalikan daftar komponen + CVE dari OSV.dev.
+- [ ] Tombol "Pindai Sekarang" berhasil memicu backend mem-parse manifest dan mengembalikan daftar komponen + CVE dari OSV.dev.
 - [ ] Hasil scan tersimpan permanen (tidak pernah menimpa/menghapus histori scan sebelumnya).
 - [ ] Scan kedua pada aset yang sama berhasil mendeteksi dan menampilkan minimal satu jenis drift (komponen baru/hilang/berubah versi) menggunakan data uji.
 - [ ] Dashboard menampilkan ringkasan yang akurat sesuai data di database (bukan hasil hardcode).
 - [ ] Notifikasi email terkirim saat ditemukan CVE kritis baru pada suatu scan.
 - [ ] Aplikasi Flutter menangani seluruh 6 kondisi UI wajib (loading awal, data berhasil dimuat, empty state, error state + retry, validasi form, loading saat submit) pada minimal fitur Asset Management.
-- [ ] Aplikasi dapat di-build dan dijalankan end-to-end (backend via Docker Compose, Flutter app di emulator/device) oleh orang lain mengikuti instruksi di bawah.
+- [ ] Aplikasi dapat di-build dan dijalankan end-to-end (backend dengan SQLite default, atau PostgreSQL via Docker Compose opsional; Flutter app di emulator/device) oleh orang lain mengikuti instruksi di bawah.
 
 ---
 
@@ -98,7 +101,7 @@ Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja
 
 ```
 ┌──────────────────────────────┐
-│   FLUTTER APP (mobile)       │
+│   FLUTTER APP (repo root)    │
 │  Login · Dashboard · Assets  │
 │  Scan Result · Alerts        │
 └───────────────┬───────────────┘
@@ -110,12 +113,13 @@ Supaya realistis untuk diselesaikan dalam satu semester, hal-hal berikut sengaja
 └───────────────┬───────────────┘
                 │
 ┌───────────────▼───────────────┐
-│   PostgreSQL (single DB)      │
+│   SQLite (default) /          │
+│   PostgreSQL (opsional)       │
 └────────────────────────────────┘
                 │
 ┌───────────────▼───────────────┐
-│   EXTERNAL TOOLS (Gratis)     │
-│   Syft · OSV.dev · SMTP       │
+│   EXTERNAL (Gratis)           │
+│   GitHub raw · OSV.dev · SMTP │
 └────────────────────────────────┘
 ```
 
@@ -125,17 +129,58 @@ Dokumentasi implementasi fitur Asset Management (state management, form, validas
 
 ---
 
+## 📁 Struktur Repository
+
+Aplikasi Flutter berada di **root repository**; backend berada di folder `backend/`.
+
+```text
+PULSE/
+  lib/                      # kode aplikasi Flutter (root)
+    main.dart
+    app.dart
+    routes/
+    screens/
+    widgets/
+    models/
+    services/
+    features/
+      asset_management/
+        data/
+        application/
+        presentation/
+  test/
+    features/
+      asset_management/
+  backend/                  # backend FastAPI
+    app/
+      api/
+      core/
+      models/
+      schemas/
+      services/
+    alembic/
+    tests/
+    .env.example
+  docs/
+    architecture/
+    P4-asset-management.md
+  pubspec.yaml
+  docker-compose.yml        # opsional (PostgreSQL)
+```
+
+---
+
 ## 🛠️ Tech Stack
 
 **Mobile:** Flutter · Riverpod (state management) · go_router · dio
 
 **Backend:** Python 3.11+ · FastAPI · SQLAlchemy 2.0 · Alembic · Pydantic · JWT
 
-**Database:** PostgreSQL 16
+**Database:** SQLite (default) · PostgreSQL 16 (opsional via Docker Compose)
 
-**Security Tools (open-source):** Syft (SBOM generation) · OSV.dev API (CVE lookup)
+**Security Tools (open-source):** Manifest parsing (`requirements.txt`, `package.json` dari GitHub raw) · OSV.dev API (CVE lookup)
 
-**DevOps:** Docker & Docker Compose
+**DevOps:** Docker & Docker Compose (opsional, hanya untuk PostgreSQL)
 
 ---
 
@@ -143,9 +188,10 @@ Dokumentasi implementasi fitur Asset Management (state management, form, validas
 
 ### Prasyarat
 
-- [Docker](https://www.docker.com/) & Docker Compose
+- [Python 3.11+](https://www.python.org/downloads/) (untuk menjalankan backend dengan SQLite default)
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (3.x) + emulator atau device
 - Git
+- Docker & Docker Compose — *opsional*, hanya jika ingin memakai PostgreSQL
 
 ### Backend
 
@@ -154,27 +200,37 @@ Dokumentasi implementasi fitur Asset Management (state management, form, validas
 git clone https://github.com/davidcungniago/PULSE.git
 cd PULSE
 
-# 2. Salin file environment
+# 2. Siapkan environment backend (SQLite default)
+cd backend
 cp .env.example .env
-# Isi kredensial SMTP untuk alert email
+# Isi kredensial SMTP untuk alert email (opsional untuk demo)
 
-# 3. Jalankan PostgreSQL & backend
-docker compose up -d --build
-
-# 4. Jalankan migrasi & seed data
-docker compose exec backend alembic upgrade head
-docker compose exec backend python -m app.seed
+# 3. Install dependency lalu jalankan migrasi & seed
+pip install -r requirements.txt
+alembic upgrade head
+python -m app.seed
+uvicorn app.main:app --reload --port 8000
 
 # API docs tersedia di: http://localhost:8000/docs
+```
+
+Seed membuat **satu user, satu project, dan dua asset** (repo GitHub publik) — tanpa hasil scan palsu. Jalankan "Pindai Sekarang" dari aplikasi untuk mengisi data komponen/CVE.
+
+**Opsional — PostgreSQL via Docker Compose** (default tetap SQLite):
+
+```bash
+docker compose up -d --build
+docker compose exec backend alembic upgrade head
+docker compose exec backend python -m app.seed
 ```
 
 ### Mobile App
 
 ```bash
-cd mobile
+# Dari root repository (aplikasi Flutter ada di root, bukan di subfolder terpisah)
 flutter pub get
 flutter run
-# Pastikan API_BASE_URL di konfigurasi mobile mengarah ke backend (mis. http://10.0.2.2:8000 untuk emulator Android)
+# Pastikan API_BASE_URL mengarah ke backend (mis. http://10.0.2.2:8000 untuk emulator Android)
 ```
 
 ---
@@ -184,7 +240,7 @@ flutter run
 1. **Register/Login** di aplikasi Flutter.
 2. **Buat project baru**, misal "Backend E-Commerce".
 3. **Tambahkan aset** — masukkan URL repository Git.
-4. Tekan **"Pindai Sekarang"** — backend men-generate SBOM dan mengecek CVE.
+4. Tekan **"Pindai Sekarang"** — backend mem-parse manifest dan mengecek CVE.
 5. Lihat **daftar komponen & CVE** dari hasil scan.
 6. Scan ulang di lain waktu untuk melihat **drift** — komponen baru/hilang/berubah versi.
 7. Jika ditemukan CVE kritis atau drift, kamu akan menerima **email alert** otomatis.
