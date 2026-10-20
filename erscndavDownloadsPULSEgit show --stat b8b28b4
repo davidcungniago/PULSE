@@ -1,0 +1,41 @@
+[33mcommit b8b28b4205269c10989a31983c8b50e8d2ea91d3[m
+Author: davidcungniago <david.cungniago@student.pradita.ac.id>
+Date:   Fri Oct 16 09:12:23 2026 +0700
+
+    add manual scan, component risk list and OSV/GitHub clients
+
+ backend/.env.example                               |   5 [32m+[m
+ ...e5f6_scan_results_components_vulnerabilities.py |  86 [32m+++++[m
+ backend/app/api/__init__.py                        |   3 [32m+[m[31m-[m
+ backend/app/api/deps.py                            |  34 [32m++[m
+ backend/app/api/scans.py                           |  80 [32m+++++[m
+ backend/app/core/config.py                         |   5 [32m+[m
+ backend/app/models/__init__.py                     |   5 [32m+[m[31m-[m
+ backend/app/models/asset.py                        |   4 [32m+[m
+ backend/app/models/component.py                    |  29 [32m++[m
+ backend/app/models/scan_result.py                  |  32 [32m++[m
+ backend/app/models/vulnerability.py                |  26 [32m++[m
+ backend/app/schemas/scan.py                        |  42 [32m+++[m
+ backend/app/services/http_client.py                |  57 [32m+++[m
+ backend/app/services/manifest_fetcher.py           |  81 [32m+++++[m
+ backend/app/services/manifest_parser.py            |  88 [32m+++++[m
+ backend/app/services/osv_client.py                 | 107 [32m++++++[m
+ backend/app/services/scan_errors.py                |  32 [32m++[m
+ backend/app/services/scan_rules.py                 |  74 [32m++++[m
+ backend/app/services/scan_service.py               | 153 [32m++++++++[m
+ backend/app/services/severity.py                   |  35 [32m++[m
+ backend/requirements.txt                           |   1 [32m+[m
+ backend/tests/fixtures/osv_querybatch_lodash.json  |  40 [32m+++[m
+ backend/tests/fixtures/osv_vuln_dedup_a.json       |  26 [32m++[m
+ backend/tests/fixtures/osv_vuln_dedup_b.json       |  25 [32m++[m
+ backend/tests/fixtures/osv_vuln_lodash.json        |  24 [32m++[m
+ backend/tests/fixtures/osv_vuln_withdrawn.json     |  12 [32m+[m
+ backend/tests/fixtures/package_json_express.json   |  20 [32m++[m
+ backend/tests/fixtures/requirements_sample.txt     |  20 [32m++[m
+ backend/tests/support.py                           | 104 [32m++++++[m
+ backend/tests/test_manifest_parser.py              | 116 [32m++++++[m
+ backend/tests/test_osv_client.py                   | 103 [32m++++++[m
+ backend/tests/test_scan_api.py                     | 390 [32m+++++++++++++++++++++[m
+ backend/tests/test_scan_rules.py                   |  90 [32m+++++[m
+ backend/tests/test_severity.py                     |  38 [32m++[m
+ 34 files changed, 1985 insertions(+), 2 deletions(-)
