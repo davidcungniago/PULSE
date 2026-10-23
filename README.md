@@ -226,6 +226,8 @@ docker compose exec backend python -m app.seed
 
 ### Mobile App
 
+Panduan integrasi API, autentikasi, notifikasi email, kamera QR, unit test, serta alur demo penilaian tersedia di [P6/P7](docs/P6-P7.md). Backend kini membutuhkan `JWT_SECRET` minimal 32 karakter dari environment. Register melalui aplikasi untuk membuat akun; seed bersifat opsional dan membutuhkan `DEMO_PASSWORD`.
+
 ```bash
 # Dari root repository (aplikasi Flutter ada di root, bukan di subfolder terpisah)
 flutter pub get

@@ -1,0 +1,9 @@
+- generic [ref=e34]:
+  - generic "Dialog":
+    - button "Dismiss" [ref=e35]
+    - group:
+      - generic [ref=e36]: Buat Proyek
+      - generic [ref=e37]: Isi nama proyek. Deskripsi bersifat opsional.
+      - textbox "Nama proyek" [ref=e39]
+      - textbox "Deskripsi (opsional)" [ref=e41]
+      - button "Buat Proyek" [disabled] [ref=e42]

@@ -9,6 +9,8 @@ import 'package:pulse/features/project_management/presentation/project_list_scre
 import 'package:pulse/models/project_model.dart';
 import 'package:pulse/services/api_client.dart';
 import 'package:pulse/services/project_service.dart';
+import 'package:pulse/features/monitoring/application/monitoring_notifier.dart';
+import '../../support/monitoring_fixture.dart';
 
 void main() {
   testWidgets('menampilkan indikator saat daftar proyek sedang dimuat',
@@ -51,6 +53,8 @@ Future<void> _pumpScreen(
         .pumpWidget(
           ProviderScope(
             overrides: [
+              monitoringRepositoryProvider
+                  .overrideWithValue(FakeMonitoringRepository()),
               projectRepositoryProvider.overrideWithValue(repository),
             ],
             child: const MaterialApp(home: ProjectListScreen()),

@@ -7,7 +7,7 @@ class ParsedRepositoryUrl {
 }
 
 final RegExp _repositoryUrl = RegExp(
-  r'^https://(github\.com|gitlab\.com)/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$',
+  r'^https://(github\.com|gitlab\.com)/([A-Za-z0-9._-]+)/([A-Za-z0-9._-]+?)(?:\.git)?/?$',
 );
 
 ParsedRepositoryUrl? parseRepositoryUrl(String value) {

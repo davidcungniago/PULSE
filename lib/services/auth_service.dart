@@ -1,13 +1,15 @@
-import '../models/user_model.dart';
+import 'api_client.dart';
 
 class AuthService {
-  Future<User> login(String email, String password) async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    return User(id: 'user-1', email: email);
-  }
+  AuthService(this.client);
+  final ApiClient client;
 
-  Future<User> register(String email, String password) async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    return User(id: 'user-1', email: email);
+  Future<Map<String, dynamic>> authenticate(String email, String password,
+      {required bool register}) async {
+    final response = await client.dio.post<Map<String, dynamic>>(
+      register ? '/api/auth/register' : '/api/auth/login',
+      data: {'Email': email.trim(), 'Password': password},
+    );
+    return response.data!;
   }
 }

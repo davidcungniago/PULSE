@@ -13,32 +13,39 @@ class WatchlistItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
-        child: ListTile(
+        child: InkWell(
           onTap: onEdit,
-          title: Text(item.repositoryName),
-          subtitle: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(item.repositoryUrl),
-              if (item.note.isNotEmpty) Text(item.note),
-            ],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              PriorityBadge(priority: item.priority),
-              IconButton(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-                tooltip: 'Ubah',
-              ),
-              IconButton(
-                onPressed: () => _confirmDelete(context, ref),
-                icon: const Icon(Icons.delete_outline),
-                tooltip: 'Hapus',
-              ),
-            ],
-          ),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item.repositoryName,
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text(item.repositoryUrl),
+                  if (item.note.isNotEmpty) Text(item.note),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      PriorityBadge(priority: item.priority),
+                      IconButton(
+                        onPressed: onEdit,
+                        icon: const Icon(Icons.edit_outlined),
+                        tooltip: 'Ubah',
+                      ),
+                      IconButton(
+                        onPressed: () => _confirmDelete(context, ref),
+                        icon: const Icon(Icons.delete_outline),
+                        tooltip: 'Hapus',
+                      ),
+                    ],
+                  ),
+                ],
+              )),
         ),
       );
 

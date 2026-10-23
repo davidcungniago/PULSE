@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import '../widgets/constrained_page.dart';
 import 'package:go_router/go_router.dart';
 
-import '../services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/auth/application/auth_notifier.dart';
+import '../widgets/pulse_trace.dart';
+import '../widgets/status_badge.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/primary_button.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  bool _loading = false;
 
   @override
   void dispose() {
@@ -27,25 +30,33 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-    await AuthService().login(_email.text, _password.text);
-    if (mounted) context.go('/projects');
+    await ref
+        .read(authProvider.notifier)
+        .submit(_email.text, _password.text, register: false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
     return Scaffold(
-      body: SafeArea(
+      body: ConstrainedPage(
+          child: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(16),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 440),
+              constraints: const BoxConstraints(maxWidth: 560),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const PulseTrace(
+                        status: RiskStatus.healthy,
+                        seed: 1,
+                        animate: false,
+                        sub: 'Tidak ada temuan'),
+                    const SizedBox(height: 24),
                     Text('Pulse',
                         style: Theme.of(context).textTheme.displaySmall),
                     const SizedBox(height: 8),
@@ -56,26 +67,26 @@ class _LoginScreenState extends State<LoginScreen> {
                       label: 'Email',
                       controller: _email,
                       keyboardType: TextInputType.emailAddress,
-                      validator: (value) =>
-                          value == null || !value.contains('@')
-                              ? 'Masukkan email yang valid.'
-                              : null,
+                      validator: ref.read(authProvider.notifier).validateEmail,
                     ),
                     const SizedBox(height: 16),
                     AppTextField(
                       label: 'Kata sandi',
                       controller: _password,
                       obscureText: true,
-                      validator: (value) => value == null || value.length < 6
-                          ? 'Kata sandi minimal 6 karakter.'
-                          : null,
+                      validator:
+                          ref.read(authProvider.notifier).validatePassword,
                     ),
                     const SizedBox(height: 24),
                     PrimaryButton(
                       label: 'Masuk',
                       onPressed: _submit,
-                      isLoading: _loading,
+                      isLoading: auth.isLoading,
                     ),
+                    if (auth.hasError)
+                      Text('${auth.error}',
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.error)),
                     TextButton(
                       onPressed: () => context.go('/register'),
                       child: const Text('Belum punya akun? Daftar'),
@@ -86,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
+      )),
     );
   }
 }

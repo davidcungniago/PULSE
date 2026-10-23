@@ -15,23 +15,23 @@ class ScanResult {
   final DateTime? finishedAt;
   final String status;
   factory ScanResult.fromJson(Map<String, dynamic> json) => ScanResult(
-        id: json['id'] as String,
-        assetId: json['assetId'] as String,
-        componentCount: json['componentCount'] as int,
-        criticalVulnerabilityCount: json['criticalVulnerabilityCount'] as int,
-        startedAt: DateTime.parse(json['startedAt'] as String),
-        finishedAt: json['finishedAt'] == null
+        id: json['Id'] as String,
+        assetId: json['AssetId'] as String,
+        componentCount: json['ComponentCount'] as int,
+        criticalVulnerabilityCount: json['CriticalVulnerabilityCount'] as int,
+        startedAt: DateTime.parse(json['StartedAt'] as String),
+        finishedAt: json['FinishedAt'] == null
             ? null
-            : DateTime.parse(json['finishedAt'] as String),
-        status: json['status'] as String,
+            : DateTime.parse(json['FinishedAt'] as String),
+        status: json['Status'] as String,
       );
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'assetId': assetId,
-        'componentCount': componentCount,
-        'criticalVulnerabilityCount': criticalVulnerabilityCount,
-        'startedAt': startedAt.toIso8601String(),
-        'finishedAt': finishedAt?.toIso8601String(),
-        'status': status
+        'Id': id,
+        'AssetId': assetId,
+        'ComponentCount': componentCount,
+        'CriticalVulnerabilityCount': criticalVulnerabilityCount,
+        'StartedAt': startedAt.toIso8601String(),
+        'FinishedAt': finishedAt?.toIso8601String(),
+        'Status': status
       };
 }

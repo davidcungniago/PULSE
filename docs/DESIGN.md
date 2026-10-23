@@ -149,3 +149,11 @@ When `hasDrift` is true and status is not notScanned, every 4th beat is replaced
 ## Not in scope
 
 New packages, custom font bundles, illustrations, splash screens, page transitions, charts, and any animation beyond the rules above.
+
+## P6/P7 extension approved for implementation
+
+The P7 scope adds `mobile_scanner` for QR repository input and `flutter_secure_storage` for authenticated sessions. Existing colors, spacing, typography and constrained layouts remain unchanged.
+
+New Indonesian copy: "Pindai QR repository", "Arahkan kamera ke QR berisi URL repository.", "Batal", "QR harus berisi URL repository GitHub atau GitLab.", "Kamera tidak tersedia atau izin ditolak. Aktifkan izin kamera, atau kembali untuk mengetik URL.", "Ubah aset", "Ubah proyek", "Simpan", "Nama", "Nama wajib diisi.", "Aset aktif", "Hapus proyek", "Hapus proyek?", "Hanya proyek tanpa aset yang dapat dihapus.", "Aset ditambahkan.", "Email terkirim", "Email gagal terkirim", "Menunggu pengiriman", "Sesi berakhir. Masuk kembali.", "Data tidak dapat dimuat. Coba lagi.", "Pemindaian selesai.", "Belum ada aset. Tambahkan repository untuk mulai memantau.", "Belum ada peringatan. Pindai aset untuk memeriksa risiko.", "Tidak ada perubahan dependensi.", "Tidak ada komponen dengan versi yang didukung.".
+
+Email notifications are delivered by the backend when a new critical CVE or drift is detected; device push notifications are not part of this implementation. Email delivery failure is shown in alert history and does not discard a scan. Camera permission is requested only after the user opens the QR scanner; manual URL input remains available after refusal or cancellation.

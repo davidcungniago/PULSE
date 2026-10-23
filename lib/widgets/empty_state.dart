@@ -14,7 +14,7 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
       child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(16),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 56, color: Theme.of(context).colorScheme.outline),
             const SizedBox(height: 16),

@@ -32,12 +32,13 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
     });
     final state = ref.watch(createProjectProvider);
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
+          child: Padding(
         padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          24 + MediaQuery.viewInsetsOf(context).bottom,
+          16,
+          16,
+          16,
+          16 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -47,10 +48,10 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             const Text('Isi nama proyek. Deskripsi bersifat opsional.'),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             if (state.submitError != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   state.submitError!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -68,7 +69,7 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
               label: 'Deskripsi (opsional)',
               controller: _descriptionController,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             PrimaryButton(
               label: 'Buat Proyek',
               isLoading: state.status == CreateProjectStatus.submitting,
@@ -81,7 +82,7 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

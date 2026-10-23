@@ -11,10 +11,18 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "sqlite:///./pulse.db"
-    jwt_secret: str = "change-me"
+    jwt_secret: str = ""
+    jwt_expiry_minutes: int = 60
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = ""
+    smtp_starttls: bool = True
     cors_origins: str = ""
     cors_origin_regex: str = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
     demo_email: str = "demo@pulse.local"
+    demo_password: str = ""
     github_raw_base_url: str = "https://raw.githubusercontent.com"
     github_api_base_url: str = "https://api.github.com"
     osv_base_url: str = "https://api.osv.dev"

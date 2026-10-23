@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/constrained_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/watched_repository.dart';
@@ -23,7 +24,8 @@ class WatchlistScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Tambah Repo'),
       ),
-      body: watched.when(
+      body: ConstrainedPage(
+          child: watched.when(
         loading: () => const LoadingIndicator(),
         error: (_, __) => ErrorState(
           message: 'Daftar pantau tidak dapat dimuat.',
@@ -38,13 +40,13 @@ class WatchlistScreen extends ConsumerWidget {
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (_, index) => WatchlistItem(
                   item: items[index],
                   onEdit: () => _openForm(context, ref, editing: items[index]),
                 ),
               ),
-      ),
+      )),
     );
   }
 

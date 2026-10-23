@@ -10,6 +10,16 @@ from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
 from app.models.user import User
+from app.services.auth_service import issue_token
+
+
+@pytest.fixture(autouse=True)
+def test_settings(monkeypatch):
+    monkeypatch.setenv("JWT_SECRET", "test-only-key-with-at-least-thirty-two-characters")
+    monkeypatch.setenv("SMTP_HOST", "")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
 
 
 @pytest.fixture()
@@ -45,5 +55,15 @@ def client(db_session):
 
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as test_client:
+        from sqlalchemy import select
+
+        def inject_auth(request):
+            user = db_session.scalar(select(User).where(User.email == get_settings().demo_email))
+            if user and "authorization" not in request.headers:
+                request.headers["Authorization"] = "Bearer " + issue_token(
+                    user.id, get_settings().jwt_secret, 60
+                )
+
+        test_client.event_hooks["request"].append(inject_auth)
         yield test_client
     app.dependency_overrides.clear()

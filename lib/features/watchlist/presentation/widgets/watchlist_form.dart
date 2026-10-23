@@ -46,12 +46,13 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
     });
     final state = ref.watch(watchlistFormProvider);
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
+          child: Padding(
         padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          24 + MediaQuery.viewInsetsOf(context).bottom,
+          16,
+          16,
+          16,
+          16 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -65,10 +66,10 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
             Text(_isEditing
                 ? 'Ubah catatan atau prioritas. URL tidak dapat diubah.'
                 : 'Masukkan URL repository GitHub/GitLab untuk dipantau.'),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             if (state.submitError != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   state.submitError!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -102,7 +103,7 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
               onSelectionChanged: (selection) =>
                   setState(() => _priority = selection.first),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             PrimaryButton(
               label: _isEditing ? 'Simpan' : 'Tambah ke Daftar',
               isLoading: state.status == WatchlistFormStatus.submitting,
@@ -116,7 +117,7 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

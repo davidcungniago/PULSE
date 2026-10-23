@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
+import '../theme/contrast.dart';
+import '../theme/pulse_colors.dart';
 
-enum RiskStatus { healthy, warning, critical, notScanned, active, inactive }
+enum RiskStatus {
+  healthy('Sehat'),
+  warning('Peringatan'),
+  critical('Perlu tindakan'),
+  notScanned('Belum dipindai'),
+  active('Aktif'),
+  inactive('Tidak aktif');
+
+  const RiskStatus(this.label);
+  final String label;
+}
 
 class StatusBadge extends StatelessWidget {
   const StatusBadge({super.key, required this.status});
   final RiskStatus status;
   @override
   Widget build(BuildContext context) {
-    final (color, label) = switch (status) {
-      RiskStatus.healthy => (Colors.green, 'Sehat'),
-      RiskStatus.warning => (Colors.orange, 'Peringatan'),
-      RiskStatus.critical => (Colors.red, 'Kritis'),
-      RiskStatus.notScanned => (Colors.grey, 'Belum dipindai'),
-      RiskStatus.active => (Colors.green, 'Aktif'),
-      RiskStatus.inactive => (Colors.grey, 'Tidak aktif'),
-    };
+    final colors = PulseColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-          color: color.withValues(alpha: .14),
-          borderRadius: BorderRadius.circular(999)),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontWeight: FontWeight.w700, fontSize: 12)),
+          color: badgeBackground(colors.riskFill(status), colors.surface),
+          borderRadius: BorderRadius.circular(12)),
+      child: Text(status.label,
+          style: Theme.of(context)
+              .textTheme
+              .labelLarge
+              ?.copyWith(color: colors.riskText(status))),
     );
   }
 }

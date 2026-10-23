@@ -1,0 +1,9 @@
+- generic [ref=e59]:
+  - generic "Dialog":
+    - button "Dismiss" [ref=e60]
+    - group:
+      - generic [ref=e61]: Tambah Aset
+      - generic [ref=e62]: Masukkan URL repositori GitHub atau GitLab.
+      - textbox "URL repositori" [ref=e64]
+      - button "Tambah Aset" [disabled] [ref=e65]
+      - button "Pindai QR repository" [ref=e66]

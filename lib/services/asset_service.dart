@@ -11,7 +11,10 @@ class AssetService {
   Future<List<Asset>> getAssets(String projectId) async {
     final response =
         await _dio.get<List<dynamic>>('/api/projects/$projectId/assets');
-    final data = response.data ?? const [];
+    final data = response.data;
+    if (data == null) {
+      throw const FormatException('Respons daftar aset tidak valid.');
+    }
     return data
         .map((item) => Asset.fromJson(item as Map<String, dynamic>))
         .toList();

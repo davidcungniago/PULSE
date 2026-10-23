@@ -30,3 +30,5 @@ Read README.md, docs/architecture/Architecture.md, and docs/USER_STORIES.md befo
 - Secrets come only from environment variables. Keep .env.example updated.
 - Enable CORS on the backend so Flutter web (Chrome) can call it.
 - Never read, print, or commit .env or any secrets.
+- Read docs/DESIGN.md before any Flutter UI work. It is the design spec. Do not invent colors, spacing or copy outside it.
+- The prompts used for this project are listed in docs/PROMPTS.md. Do not edit that file.

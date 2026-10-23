@@ -15,7 +15,7 @@ class RiskSummaryCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(children: [
             Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

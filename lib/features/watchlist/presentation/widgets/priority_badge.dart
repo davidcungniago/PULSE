@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../models/watched_repository.dart';
+import '../../../../theme/contrast.dart';
+import '../../../../theme/pulse_colors.dart';
+import '../../../../widgets/status_badge.dart';
 
 class PriorityBadge extends StatelessWidget {
   const PriorityBadge({super.key, required this.priority});
@@ -9,24 +12,24 @@ class PriorityBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (priority) {
-      WatchPriority.high => Colors.red,
-      WatchPriority.medium => Colors.orange,
-      WatchPriority.low => Colors.green,
+    final colors = PulseColors.of(context);
+    final status = switch (priority) {
+      WatchPriority.high => RiskStatus.critical,
+      WatchPriority.medium => RiskStatus.warning,
+      WatchPriority.low => RiskStatus.healthy,
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: .14),
-        borderRadius: BorderRadius.circular(999),
+        color: badgeBackground(colors.riskFill(status), colors.surface),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         priority.label,
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.w700,
-          fontSize: 12,
-        ),
+        style: Theme.of(context)
+            .textTheme
+            .labelLarge
+            ?.copyWith(color: colors.riskText(status)),
       ),
     );
   }

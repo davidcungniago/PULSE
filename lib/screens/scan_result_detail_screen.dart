@@ -1,87 +1,94 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/drift_event_model.dart';
-import '../services/scan_service.dart';
+import '../features/monitoring/application/monitoring_notifier.dart';
+import '../widgets/constrained_page.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/error_state.dart';
 import '../widgets/loading_indicator.dart';
-import '../widgets/status_badge.dart';
+import '../widgets/primary_button.dart';
+import '../widgets/severity_badge.dart';
+import '../theme/pulse_typography.dart';
 
-class ScanResultDetailScreen extends StatelessWidget {
+class ScanResultDetailScreen extends ConsumerWidget {
   const ScanResultDetailScreen({super.key, required this.assetId});
-
   final String assetId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final detail = ref.watch(scanDetailProvider(assetId));
+    final action = ref.watch(scanActionProvider(assetId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Hasil Pemindaian')),
-      body: FutureBuilder(
-        future: Future.wait([
-          ScanService().getComponents(assetId),
-          ScanService().getDriftEvents(assetId)
-        ]),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const LoadingIndicator();
-          final components = snapshot.data![0] as List;
-          final driftEvents = snapshot.data![1] as List;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text('Komponen', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              ...components.map(
-                (component) => Card(
-                  child: ListTile(
-                    title: Text('${component.name} ${component.version}'),
-                    subtitle: Text('Lisensi: ${component.license}'),
-                    trailing: StatusBadge(
-                        status: _statusForSeverity(
-                            _severityForComponent(component.name))),
-                  ),
+      appBar: AppBar(title: const Text('Hasil pemindaian')),
+      body: ConstrainedPage(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(children: [
+                PrimaryButton(
+                  label: action.hasError ? 'Coba Lagi' : 'Pindai sekarang',
+                  isLoading: action.isLoading,
+                  onPressed: () => ref
+                      .read(scanActionProvider(assetId).notifier)
+                      .scanOne(assetId),
                 ),
+                if (action.hasError)
+                  Text('${action.error}',
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.error)),
+                if (action.valueOrNull != null) Text(action.valueOrNull!),
+              ]),
+            ),
+            Expanded(
+              child: detail.when(
+                loading: () => const LoadingIndicator(),
+                error: (error, _) => ErrorState(
+                    message: monitoringError(error),
+                    onRetry: () => ref.invalidate(scanDetailProvider(assetId))),
+                data: (data) {
+                  if (data == null) {
+                    return const EmptyState(
+                        message: 'Belum pernah dipindai. Pindai untuk mulai.');
+                  }
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Text('Komponen',
+                          style: Theme.of(context).textTheme.titleLarge),
+                      if (data.components.isEmpty)
+                        const EmptyState(
+                            message:
+                                'Tidak ada komponen dengan versi yang didukung.'),
+                      ...data.components.map((component) => Card(
+                            child: ListTile(
+                              title: Text(
+                                  '${component.name}@${component.version}',
+                                  style: PulseTypography.mono),
+                              subtitle: Text(
+                                  'Lisensi: ${component.license}\n${component.cveIds.join(", ")}'),
+                              trailing:
+                                  SeverityBadge(severity: component.severity),
+                            ),
+                          )),
+                      const SizedBox(height: 24),
+                      Text('Perubahan dependensi',
+                          style: Theme.of(context).textTheme.titleLarge),
+                      if (data.drift.isEmpty)
+                        const Text('Tidak ada perubahan dependensi.'),
+                      ...data.drift.map((event) => Card(
+                              child: ListTile(
+                            title: Text('${event.label}: ${event.name}'),
+                            subtitle: Text(event.details),
+                          ))),
+                    ],
+                  );
+                },
               ),
-              const SizedBox(height: 24),
-              Text('Perubahan dependensi',
-                  style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 8),
-              ...driftEvents.map(
-                (event) => Card(
-                  child: ListTile(
-                    leading: Icon(_driftIcon(event.type)),
-                    title: Text(event.componentName),
-                    subtitle: Text(event.details),
-                    trailing: Text(_driftLabel(event.type)),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
-
-  String _severityForComponent(String componentName) => switch (componentName) {
-        'lodash' => 'critical',
-        'axios' => 'warning',
-        _ => 'healthy',
-      };
-
-  RiskStatus _statusForSeverity(String severity) => switch (severity) {
-        'critical' => RiskStatus.critical,
-        'warning' => RiskStatus.warning,
-        'notScanned' => RiskStatus.notScanned,
-        _ => RiskStatus.healthy,
-      };
-
-  IconData _driftIcon(DriftEventType type) => switch (type) {
-        DriftEventType.added => Icons.add_circle_outline,
-        DriftEventType.removed => Icons.remove_circle_outline,
-        DriftEventType.changed => Icons.sync_alt,
-      };
-
-  String _driftLabel(DriftEventType type) => switch (type) {
-        DriftEventType.added => 'Ditambahkan',
-        DriftEventType.removed => 'Dihapus',
-        DriftEventType.changed => 'Diubah',
-      };
 }

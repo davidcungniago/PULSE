@@ -1,0 +1,17 @@
+- generic [ref=f1e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button "Back" [active] [ref=f1e12]
+            - heading "Ringkasan Proyek" [level=2] [ref=f1e13]
+            - button [ref=f1e14]
+          - generic:
+            - group:
+              - 'img "Belum dipindai Tanpa sinyal. Pindai untuk mulai. Status: Belum dipindai. Tanpa sinyal. Pindai untuk mulai." [ref=f1e15]'
+              - generic [ref=f1e17]: 0 Komponen 0 CVE kritis 0 Drift
+              - button "Pindai Semua Aset" [ref=f1e19]
+              - generic [ref=f1e21]: Aset
+              - button "express Belum pernah dipindai Belum dipindai" [ref=f1e23]
+              - button "Kelola aset" [ref=f1e24]

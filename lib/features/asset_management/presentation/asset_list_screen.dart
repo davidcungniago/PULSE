@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../../../widgets/constrained_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../widgets/empty_state.dart';
@@ -24,7 +25,8 @@ class AssetListScreen extends ConsumerWidget {
         icon: const Icon(Icons.add),
         label: const Text('Tambah Aset'),
       ),
-      body: Column(
+      body: ConstrainedPage(
+          child: Column(
         children: [
           if (kDebugMode)
             _DemoModeControls(
@@ -48,29 +50,35 @@ class AssetListScreen extends ConsumerWidget {
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: items.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      separatorBuilder: (_, __) => const SizedBox(height: 8),
                       itemBuilder: (_, index) =>
                           AssetListItem(asset: items[index]),
                     ),
             ),
           ),
         ],
-      ),
+      )),
     );
   }
 
   Future<void> _openAddAssetForm(BuildContext context,
       {bool showSubmitting = false}) async {
+    final container = ProviderScope.containerOf(context, listen: false);
+    container.read(addAssetProvider(projectId).notifier).reset();
     if (showSubmitting) {
       final container = ProviderScope.containerOf(context);
       container.read(addAssetProvider(projectId).notifier).showDemoSubmitting();
     }
-    await showModalBottomSheet<bool>(
+    final added = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (_) => AddAssetForm(projectId: projectId),
     );
+    if (added == true && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Aset ditambahkan.')));
+    }
   }
 }
 

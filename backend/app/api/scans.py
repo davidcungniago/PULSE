@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
 from app.api.deps import (
@@ -6,6 +6,7 @@ from app.api.deps import (
     DbSession,
     ManifestFetcherDep,
     OsvClientDep,
+    get_mail_client,
 )
 from app.models.asset import Asset
 from app.models.project import Project
@@ -53,10 +54,13 @@ def scan_asset(
     current_user: CurrentUser,
     manifest_fetcher: ManifestFetcherDep,
     osv_client: OsvClientDep,
+    mail_client=Depends(get_mail_client),
 ):
     asset = _owned_asset(db, assetId, current_user)
+    if not asset.is_active:
+        raise HTTPException(409, "Aktifkan aset sebelum memindai.")
     try:
-        outcome = scan_service.run_scan(db, asset, manifest_fetcher, osv_client)
+        outcome = scan_service.run_scan(db, asset, manifest_fetcher, osv_client, mail_client)
     except tuple(_SCAN_ERROR_STATUS) as exc:
         raise HTTPException(status_code=_SCAN_ERROR_STATUS[type(exc)], detail=str(exc)) from exc
 

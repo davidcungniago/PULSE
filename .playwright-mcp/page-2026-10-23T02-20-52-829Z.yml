@@ -1,0 +1,14 @@
+- generic [active] [ref=e5] [cursor=pointer]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - group:
+            - generic:
+              - 'img "Status: Sehat. Tidak ada temuan" [ref=e17]'
+              - generic [ref=e18]: Buat Akun
+              - generic [ref=e19]: Mulai memantau risiko proyek Anda.
+              - textbox "Email" [ref=e21]
+              - textbox "Kata sandi" [ref=e23]
+              - button "Daftar" [ref=e24]
+              - button "Sudah punya akun? Masuk" [ref=e25]

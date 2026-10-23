@@ -1,0 +1,11 @@
+- generic [ref=e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button "Back" [active] [ref=e49]
+            - heading "Ringkasan Proyek" [level=2] [ref=e50]
+            - button [ref=e51]
+          - generic [ref=e52]: Belum ada aset. Tambahkan repository untuk mulai memantau.
+          - button "Tambah aset" [ref=e53]

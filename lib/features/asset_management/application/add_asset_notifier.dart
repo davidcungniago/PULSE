@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/api_error_mapper.dart';
+import '../../../services/repository_url.dart';
+import '../../monitoring/application/monitoring_notifier.dart';
 import 'asset_list_notifier.dart';
 
 enum AddAssetStatus { idle, validating, submitting, success, failure }
@@ -37,19 +39,12 @@ final addAssetProvider =
         AddAssetNotifier.new);
 
 class AddAssetNotifier extends FamilyNotifier<AddAssetState, String> {
-  static final _repositoryUrl =
-      RegExp(r'^https://(github\.com|gitlab\.com)/[^/\s]+/[^/\s]+/?$');
-
   @override
   AddAssetState build(String projectId) => const AddAssetState();
 
   void validateRepositoryUrl(String value) {
-    final url = value.trim();
-    final error = url.isEmpty
-        ? 'URL repositori wajib diisi.'
-        : !_repositoryUrl.hasMatch(url)
-            ? 'Gunakan URL GitHub atau GitLab yang valid.'
-            : null;
+    if (state.status == AddAssetStatus.submitting) return;
+    final error = repositoryUrlError(value);
     state = AddAssetState(
         status: AddAssetStatus.validating,
         urlError: error,
@@ -57,6 +52,7 @@ class AddAssetNotifier extends FamilyNotifier<AddAssetState, String> {
   }
 
   Future<void> submit(String repositoryUrl) async {
+    if (state.status == AddAssetStatus.submitting) return;
     validateRepositoryUrl(repositoryUrl);
     if (state.urlError != null || state.status == AddAssetStatus.submitting) {
       return;
@@ -67,6 +63,7 @@ class AddAssetNotifier extends FamilyNotifier<AddAssetState, String> {
           .read(assetRepositoryProvider)
           .addAsset(arg, repositoryUrl.trim());
       ref.read(assetListProvider(arg).notifier).refresh();
+      ref.invalidate(dashboardProvider(arg));
       state = const AddAssetState(status: AddAssetStatus.success);
     } on DioException catch (error) {
       state = AddAssetState(
@@ -85,4 +82,6 @@ class AddAssetNotifier extends FamilyNotifier<AddAssetState, String> {
     state = const AddAssetState(
         status: AddAssetStatus.submitting, isUrlValid: true);
   }
+
+  void reset() => state = const AddAssetState();
 }

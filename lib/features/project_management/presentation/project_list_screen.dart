@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../widgets/constrained_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -17,7 +18,7 @@ class ProjectListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final projects = ref.watch(projectListProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Proyek Saya'), actions: [
+      appBar: AppBar(title: const Text('Pusat pemantauan'), actions: [
         IconButton(
             onPressed: () => context.push('/watchlist'),
             icon: const Icon(Icons.bookmarks_outlined),
@@ -30,7 +31,8 @@ class ProjectListScreen extends ConsumerWidget {
           onPressed: () => _openCreateProjectForm(context, ref),
           icon: const Icon(Icons.add),
           label: const Text('Buat Proyek')),
-      body: projects.when(
+      body: ConstrainedPage(
+          child: projects.when(
         loading: () => const LoadingIndicator(),
         error: (_, __) => ErrorState(
           message: 'Proyek tidak dapat dimuat.',
@@ -45,11 +47,11 @@ class ProjectListScreen extends ConsumerWidget {
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: items.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
                 itemBuilder: (_, index) =>
                     ProjectListItem(project: items[index]),
               ),
-      ),
+      )),
     );
   }
 

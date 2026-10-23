@@ -1,35 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../features/monitoring/application/monitoring_notifier.dart';
+import '../widgets/error_state.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/constrained_page.dart';
 import 'package:go_router/go_router.dart';
 
-import '../services/dashboard_service.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/primary_button.dart';
-import '../widgets/risk_summary_card.dart';
-import '../widgets/status_badge.dart';
+import '../widgets/pulse_banner.dart';
+import '../widgets/vital_tile.dart';
+import '../widgets/asset_card.dart';
+import '../services/stable_hash.dart';
 
-class ProjectDashboardScreen extends StatefulWidget {
+class ProjectDashboardScreen extends ConsumerStatefulWidget {
   const ProjectDashboardScreen({super.key, required this.projectId});
   final String projectId;
 
   @override
-  State<ProjectDashboardScreen> createState() => _ProjectDashboardScreenState();
+  ConsumerState<ProjectDashboardScreen> createState() =>
+      _ProjectDashboardScreenState();
 }
 
-class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
-  bool _isScanning = false;
-
-  Future<void> _scanAllAssets() async {
-    if (_isScanning) return;
-    setState(() => _isScanning = true);
-    await Future<void>.delayed(const Duration(milliseconds: 900));
-    if (!mounted) return;
-    setState(() => _isScanning = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pemindaian selesai (mode simulasi).')));
-  }
-
+class _ProjectDashboardScreenState
+    extends ConsumerState<ProjectDashboardScreen> {
   @override
   Widget build(BuildContext context) {
+    final dashboard = ref.watch(dashboardProvider(widget.projectId));
+    final scan = ref.watch(scanActionProvider(widget.projectId));
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ringkasan Proyek'),
@@ -40,57 +38,71 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
               icon: const Icon(Icons.notifications_outlined))
         ],
       ),
-      body: FutureBuilder(
-        future: DashboardService().getDashboard(widget.projectId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const LoadingIndicator();
-          final data = snapshot.data!;
+      body: ConstrainedPage(
+          child: dashboard.when(
+        loading: () => const LoadingIndicator(),
+        error: (error, _) => ErrorState(
+            message: monitoringError(error),
+            onRetry: () => ref.invalidate(dashboardProvider(widget.projectId))),
+        data: (data) {
+          if (data.assets.isEmpty) {
+            return EmptyState(
+                message:
+                    'Belum ada aset. Tambahkan repository untuk mulai memantau.',
+                actionLabel: 'Tambah aset',
+                onAction: () =>
+                    context.push('/projects/${widget.projectId}/assets'));
+          }
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              GridView.count(
-                crossAxisCount: 2,
-                childAspectRatio: 1.7,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  RiskSummaryCard(
-                      value: '${data.totalAssets}',
-                      label: 'Total aset',
-                      icon: Icons.inventory_2_outlined),
-                  RiskSummaryCard(
-                      value: '${data.totalComponents}',
-                      label: 'Total komponen',
-                      icon: Icons.widgets_outlined),
-                  RiskSummaryCard(
-                      value: '${data.criticalVulnerabilities}',
-                      label: 'CVE kritis',
-                      icon: Icons.warning_amber_rounded),
-                  RiskSummaryCard(
-                      value: '${data.assetsWithDrift}',
-                      label: 'Aset dengan drift',
-                      icon: Icons.compare_arrows_outlined),
-                ],
+              PulseBanner(
+                status: data.status,
+                seed: stableHash(widget.projectId),
+                sub: data.statusLine,
+                hasDrift: data.assetsWithDrift > 0,
+                scanning: scan.isLoading,
+                animate: true,
               ),
+              const SizedBox(height: 16),
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(
+                    child: VitalTile(
+                        value: '${data.totalComponents}', label: 'Komponen')),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: VitalTile(
+                        value: '${data.criticalVulnerabilities}',
+                        label: 'CVE kritis')),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: VitalTile(
+                        value: '${data.assetsWithDrift}', label: 'Drift')),
+              ]),
               const SizedBox(height: 16),
               PrimaryButton(
                   label: 'Pindai Semua Aset',
-                  onPressed: _scanAllAssets,
-                  isLoading: _isScanning,
+                  onPressed: () => ref
+                      .read(scanActionProvider(widget.projectId).notifier)
+                      .scanAll(data.assets),
+                  isLoading: scan.isLoading,
                   icon: Icons.radar),
               const SizedBox(height: 24),
+              if (scan.hasValue && scan.value != null) Text(scan.value!),
+              if (scan.hasError) Text('${scan.error}'),
               Text('Aset', style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ...data.assets.map(
-                (asset) => Card(
-                  child: ListTile(
+                (asset) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: AssetCard(
+                    name: asset.name,
+                    status: asset.status,
+                    timeLabel: asset.lastScannedAt == null
+                        ? 'Belum pernah dipindai'
+                        : 'Dipindai ${asset.lastScannedAt!.hour.toString().padLeft(2, '0')}:${asset.lastScannedAt!.minute.toString().padLeft(2, '0')}',
                     onTap: () => context.push(
                         '/projects/${widget.projectId}/scan-results/${asset.assetId}'),
-                    title: Text(asset.name),
-                    subtitle: Text(asset.lastScannedAt == null
-                        ? 'Belum pernah dipindai'
-                        : 'Dipindai ${asset.lastScannedAt!.hour.toString().padLeft(2, '0')}:${asset.lastScannedAt!.minute.toString().padLeft(2, '0')}'),
-                    trailing: StatusBadge(status: asset.status),
                   ),
                 ),
               ),
@@ -102,7 +114,7 @@ class _ProjectDashboardScreenState extends State<ProjectDashboardScreen> {
             ],
           );
         },
-      ),
+      )),
     );
   }
 }

@@ -7,7 +7,6 @@ from app.models.project import Project
 from app.models.user import User
 from app.services.asset_service import DuplicateAssetError, create_asset
 
-DEMO_PASSWORD = "demo123"
 DEMO_PROJECT_NAME = "Platform Pembayaran"
 DEMO_PROJECT_DESCRIPTION = "Layanan backend utama."
 DEMO_REPOSITORIES = [
@@ -26,7 +25,10 @@ def seed() -> None:
     try:
         user = db.scalar(select(User).where(User.email == demo_email))
         if user is None:
-            user = User(email=demo_email, password_hash=_hash_password(DEMO_PASSWORD))
+            password = get_settings().demo_password
+            if len(password) < 6:
+                raise ValueError("Isi DEMO_PASSWORD minimal 6 karakter sebelum menjalankan seed.")
+            user = User(email=demo_email, password_hash=_hash_password(password))
             db.add(user)
             db.flush()
 

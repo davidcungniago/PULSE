@@ -13,7 +13,10 @@ def _validation_message(exc: RequestValidationError) -> str:
         if isinstance(message, str):
             if message.startswith("Value error, "):
                 message = message[len("Value error, ") :]
-            return message
+                return message
+            if error.get("type") == "missing":
+                return "Data wajib belum diisi."
+            return "Format data yang dikirim tidak valid."
     return "Data yang dikirim tidak valid."
 
 

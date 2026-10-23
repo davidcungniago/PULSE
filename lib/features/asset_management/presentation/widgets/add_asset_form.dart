@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../widgets/app_text_field.dart';
 import '../../../../widgets/primary_button.dart';
 import '../../application/add_asset_notifier.dart';
+import '../qr_scanner_screen.dart';
 
 class AddAssetForm extends ConsumerStatefulWidget {
   const AddAssetForm({super.key, required this.projectId});
@@ -33,12 +34,13 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
     );
     final state = ref.watch(addAssetProvider(widget.projectId));
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
+          child: Padding(
         padding: EdgeInsets.fromLTRB(
-          24,
-          12,
-          24,
-          24 + MediaQuery.viewInsetsOf(context).bottom,
+          16,
+          16,
+          16,
+          16 + MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -48,10 +50,10 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             const Text('Masukkan URL repositori GitHub atau GitLab.'),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             if (state.submitError != null)
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   state.submitError!,
                   style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -67,7 +69,7 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
                   .read(addAssetProvider(widget.projectId).notifier)
                   .validateRepositoryUrl,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             PrimaryButton(
               label: 'Tambah Aset',
               isLoading: state.status == AddAssetStatus.submitting,
@@ -77,9 +79,25 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
                       .submit(_controller.text)
                   : null,
             ),
+            TextButton.icon(
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text('Pindai QR repository'),
+              onPressed: state.status == AddAssetStatus.submitting
+                  ? null
+                  : () async {
+                      final url = await Navigator.of(context).push<String>(
+                          MaterialPageRoute(
+                              builder: (_) => const QrScannerScreen()));
+                      if (!mounted || url == null) return;
+                      _controller.text = url;
+                      ref
+                          .read(addAssetProvider(widget.projectId).notifier)
+                          .validateRepositoryUrl(url);
+                    },
+            ),
           ],
         ),
-      ),
+      )),
     );
   }
 }

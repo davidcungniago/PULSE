@@ -1,0 +1,18 @@
+- generic [ref=f1e5] [cursor=pointer]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button "Back" [ref=f1e12]
+            - heading "Ringkasan Proyek" [level=2] [ref=f1e13]
+            - button [ref=f1e14]
+          - generic:
+            - group:
+              - 'img "Sehat Tidak ada temuan Status: Sehat. Tidak ada temuan" [ref=f1e25]'
+              - generic [ref=f1e17]: 44 Komponen 0 CVE kritis 0 Drift
+              - button "Pindai Semua Aset" [ref=f1e26]
+              - generic [ref=f1e21]: Pemindaian selesai.
+              - generic [ref=f1e22]: Aset
+              - button "express Dipindai 09:23 Sehat" [ref=f1e28]
+              - button "Kelola aset" [ref=f1e29]

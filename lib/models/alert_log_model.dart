@@ -11,16 +11,16 @@ class AlertLog {
   final String message;
   final DateTime sentAt;
   factory AlertLog.fromJson(Map<String, dynamic> json) => AlertLog(
-      id: json['id'] as String,
-      projectId: json['projectId'] as String,
-      type: json['type'] as String,
-      message: json['message'] as String,
-      sentAt: DateTime.parse(json['sentAt'] as String));
+      id: json['Id'] as String,
+      projectId: json['ProjectId'] as String,
+      type: json['Type'] as String,
+      message: json['Message'] as String,
+      sentAt: DateTime.parse(json['SentAt'] as String));
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'projectId': projectId,
-        'type': type,
-        'message': message,
-        'sentAt': sentAt.toIso8601String()
+        'Id': id,
+        'ProjectId': projectId,
+        'Type': type,
+        'Message': message,
+        'SentAt': sentAt.toIso8601String()
       };
 }

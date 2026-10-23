@@ -8,10 +8,10 @@ def test_health(client):
     assert resp.json() == {"status": "ok"}
 
 
-def test_list_projects_without_seed_returns_401(client):
+def test_list_projects_without_session_returns_401(client):
     resp = client.get("/api/projects")
     assert resp.status_code == 401
-    assert resp.json() == {"Message": "Data awal belum dibuat. Jalankan seed terlebih dahulu."}
+    assert resp.json() == {"Message": "Masuk untuk melanjutkan."}
 
 
 def test_list_projects_scoped_to_user(client, db_session, demo_user):

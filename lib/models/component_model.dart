@@ -15,21 +15,21 @@ class Component {
   final String purl;
   final String license;
   factory Component.fromJson(Map<String, dynamic> json) => Component(
-        id: json['id'] as String,
-        scanResultId: json['scanResultId'] as String,
-        name: json['name'] as String,
-        version: json['version'] as String,
-        ecosystem: json['ecosystem'] as String,
-        purl: json['purl'] as String,
-        license: json['license'] as String,
+        id: json['Id'] as String,
+        scanResultId: json['ScanResultId'] as String,
+        name: json['Name'] as String,
+        version: json['Version'] as String,
+        ecosystem: json['Ecosystem'] as String,
+        purl: json['Purl'] as String,
+        license: json['License'] as String,
       );
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'scanResultId': scanResultId,
-        'name': name,
-        'version': version,
-        'ecosystem': ecosystem,
-        'purl': purl,
-        'license': license
+        'Id': id,
+        'ScanResultId': scanResultId,
+        'Name': name,
+        'Version': version,
+        'Ecosystem': ecosystem,
+        'Purl': purl,
+        'License': license
       };
 }
