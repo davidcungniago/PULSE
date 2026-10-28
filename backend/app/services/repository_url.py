@@ -55,7 +55,12 @@ def parse_repository_url(raw: str) -> ParsedRepositoryUrl:
         raise InvalidRepositoryUrl("URL harus berformat owner/nama-repositori.")
 
     owner, repository_name = segments
-    if not _NAME_PATTERN.match(owner) or not _NAME_PATTERN.match(repository_name):
+    if (
+        owner in {".", ".."}
+        or repository_name in {".", ".."}
+        or not _NAME_PATTERN.fullmatch(owner)
+        or not _NAME_PATTERN.fullmatch(repository_name)
+    ):
         raise InvalidRepositoryUrl("Nama owner atau repositori berisi karakter yang tidak valid.")
 
     return ParsedRepositoryUrl(

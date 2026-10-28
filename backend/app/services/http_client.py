@@ -26,7 +26,7 @@ class HttpClient(Protocol):
 
 class HttpxClient:
     def __init__(self, timeout: float) -> None:
-        self._client = httpx.Client(timeout=timeout, follow_redirects=True)
+        self._client = httpx.Client(timeout=timeout, follow_redirects=False)
 
     def get(self, url: str, *, max_bytes: int | None = None) -> HttpResponse:
         try:

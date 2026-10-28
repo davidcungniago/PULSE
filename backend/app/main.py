@@ -1,3 +1,7 @@
+import logging
+from time import monotonic
+from uuid import uuid4
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -5,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import api_router
 from app.core.config import get_settings
+from app.services.safe_logging import request_log
 
 
 def _validation_message(exc: RequestValidationError) -> str:
@@ -23,6 +28,31 @@ def _validation_message(exc: RequestValidationError) -> str:
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="Pulse API", version="0.1.0")
+
+    @app.middleware("http")
+    async def safe_request_logging(request: Request, call_next):
+        request_id = uuid4().hex
+        started = monotonic()
+        try:
+            response = await call_next(request)
+        except Exception:
+            response = JSONResponse(
+                status_code=500, content={"Message": "Terjadi kesalahan pada server."}
+            )
+        route = getattr(request.scope.get("route"), "path", "<unmatched>")
+        logging.getLogger("uvicorn.error").info(
+            request_log(
+                request_id,
+                request.method
+                if request.method in {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"}
+                else "OTHER",
+                route,
+                response.status_code,
+                round((monotonic() - started) * 1000),
+            )
+        )
+        response.headers["X-Request-ID"] = request_id
+        return response
 
     origins = settings.cors_origin_list
     app.add_middleware(

@@ -2,6 +2,101 @@
 
 ### Continuous Supply Chain Integrity Monitor — Mobile Companion
 
+## Instalasi ulang dari fresh clone dan akses demo
+
+Panduan berikut adalah jalur utama untuk reviewer. Jangan menyalin `.env`, virtualenv, database, atau folder `build` dari instalasi lama. Gunakan terminal PowerShell terpisah untuk backend dan frontend. Versi verifikasi: Flutter 3.47.5 / Dart 3.13.4, Python 3.13. Git dan akses unduhan dependency diperlukan.
+
+```powershell
+git clone https://github.com/davidcungniago/PULSE.git
+cd PULSE
+git rev-parse HEAD
+python -m venv backend/.venv
+backend/.venv/Scripts/python.exe -m pip install -r backend/requirements-dev.txt
+flutter pub get --enforce-lockfile
+```
+
+Jika perubahan review belum digabungkan, clone branch PR memakai `git clone --branch NAMA_BRANCH https://github.com/davidcungniago/PULSE.git`. Catat SHA yang diuji; clone branch utama tidak otomatis berisi perubahan lokal yang belum di-push.
+
+### Run backend dan migrasi SQLite kosong
+
+Dari folder `backend`, terminal pertama:
+
+```powershell
+cd backend
+$env:DATABASE_URL = 'sqlite:///./pulse.db'
+$env:JWT_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+$env:CORS_ORIGINS = 'http://localhost:8080,http://127.0.0.1:8080'
+$env:CORS_ORIGIN_REGEX = ''
+.venv/Scripts/python.exe -m alembic upgrade head
+.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+Kunci acak di atas hanya untuk demo terminal. Untuk deployment, simpan `JWT_SECRET` stabil (minimal 32 karakter) di secret manager/environment; jangan mencetak atau memasukkannya ke Git. Mengganti kunci membuat token lama tidak berlaku. Konfigurasi opsional ada di `backend/.env.example`; isi secara lokal, jangan commit `.env`. Database baru kosong; buat akun melalui **Daftar**, bukan memakai password bersama. Seed opsional membutuhkan `DEMO_PASSWORD` dari environment.
+
+Akses API: `http://127.0.0.1:8000/health` dan dokumentasi `http://127.0.0.1:8000/docs`.
+
+### Run Flutter, build, dan deploy demo lokal
+
+Dari root repo, terminal kedua:
+
+```powershell
+flutter run -d chrome --web-port 8080 --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
+
+Untuk menguji hasil build release, hentikan proses Flutter tadi dengan Ctrl+C, lalu:
+
+```powershell
+flutter build web --no-wasm-dry-run --dart-define=API_BASE_URL=http://127.0.0.1:8000
+backend/.venv/Scripts/python.exe -m http.server 8080 --bind 127.0.0.1 --directory build/web
+```
+
+Buka `http://127.0.0.1:8080`. Backend harus tetap berjalan. Demo: daftar akun → buat proyek → tambah `https://github.com/expressjs/express` → muat ulang → pindai → lihat hasil/dashboard. Scan memerlukan akses GitHub dan OSV. SMTP opsional; tanpa konfigurasi, alert dicatat gagal terkirim dan scan tetap tersimpan. Kamera membutuhkan izin browser dan localhost/HTTPS.
+
+Android emulator memakai `--dart-define=API_BASE_URL=http://10.0.2.2:8000`. Untuk perangkat fisik/hosting, gunakan URL API yang dapat dijangkau perangkat dan HTTPS. `API_BASE_URL` tertanam saat build: perubahan URL memerlukan build ulang. Server Python di atas hanya untuk demo lokal, bukan server produksi. Hosting publik membutuhkan HTTPS, reverse proxy, pembatasan request/rate, origin CORS eksplisit, backup database, dan secret deployment; tidak otomatis dipublikasikan oleh workflow repo.
+
+Paket web dapat dibuat dengan `Compress-Archive -Path build/web/* -DestinationPath pulse-web-demo.zip`. Paket ini hanya frontend, tanpa database/backend/secret; harus dilayani melalui HTTP(S), bukan membuka `index.html` sebagai file. Hapus/timpa paket lama hanya setelah memastikan targetnya benar.
+
+### Semua tes dan pemeriksaan
+
+```powershell
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test --concurrency=1 --reporter expanded
+backend/.venv/Scripts/python.exe -m ruff format --check backend/app backend/tests backend/scripts backend/alembic
+backend/.venv/Scripts/python.exe -m ruff check backend/app backend/tests backend/scripts
+cd backend
+.venv/Scripts/python.exe -m pytest -q -p no:cacheprovider
+```
+
+Unit/API test menggunakan database in-memory dan fake client, tanpa jaringan eksternal. Jalankan setiap perintah sampai exit code 0; jangan menyimpulkan semua tes lulus dari build saja. Output, temuan security, dan batas verifikasi dicatat di [laporan verifikasi](docs/SECURITY-VERIFICATION.md). Contoh log aman dan troubleshooting tersedia di [panduan log](docs/SAFE-LOGS.md).
+
+### Docker lokal: pilih SQLite atau PostgreSQL
+
+Docker Desktop harus berjalan. Jalankan dari root repo; variabel berikut hanya berlaku untuk terminal ini. `COMPOSE_DISABLE_ENV_FILE` mencegah Compose membaca file `.env` otomatis.
+
+```powershell
+$env:COMPOSE_DISABLE_ENV_FILE = '1'
+$env:JWT_SECRET = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+docker compose -p pulse-demo config --quiet
+docker compose -p pulse-demo up -d --build backend
+docker compose -p pulse-demo ps
+```
+
+Migrasi dijalankan sebelum API mulai. SQLite tersimpan di named volume `pulse-demo_pulse_sqlite`, bukan writable layer container. API hanya diekspos pada localhost:8000. Untuk PostgreSQL, hentikan service SQLite dahulu (jangan jalankan kedua API pada port sama):
+
+```powershell
+docker compose -p pulse-demo stop backend
+$env:POSTGRES_PASSWORD = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+docker compose -p pulse-demo --profile postgres up -d --build db backend-postgres
+docker compose -p pulse-demo --profile postgres ps
+```
+
+Simpan password PostgreSQL yang sama untuk volume yang sudah ada; mengganti environment tidak mengubah password database lama. Gunakan nilai hex untuk contoh URL koneksi ini. Port PostgreSQL tidak dipublikasikan ke host. Jangan gunakan `down -v` karena menghapus data. Untuk berhenti tanpa menghapus data: `docker compose -p pulse-demo --profile postgres stop`.
+
+### Pull request
+
+Workflow `.github/workflows/verify.yml` menjalankan tes/analyzer/build pada PR dan menyediakan artifact web lokal. Workflow baru bukan bukti CI lulus sampai benar-benar dijalankan GitHub. Setelah Anda commit dan push branch, buat PR melalui GitHub dengan target branch yang sesuai, isi template, dan lampirkan SHA/output verifikasi. PR aktual tidak dapat dibuat untuk perubahan yang masih hanya ada di working tree. Jangan unggah `.env`, database, token, atau log mentah yang memuat kredensial.
+
 **Aplikasi mobile pendamping bagi developer dan security engineer untuk memantau risiko rantai pasok perangkat lunak (SBOM & CVE) kapan pun, dari genggaman.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -206,10 +301,12 @@ cp .env.example .env
 # Isi kredensial SMTP untuk alert email (opsional untuk demo)
 
 # 3. Install dependency lalu jalankan migrasi & seed
-pip install -r requirements.txt
+python -m venv .venv
+# Aktifkan virtualenv dan atur JWT_SECRET sesuai panduan fresh clone di atas.
+pip install -r requirements-dev.txt
 alembic upgrade head
-python -m app.seed
-uvicorn app.main:app --reload --port 8000
+# Seed opsional: python -m app.seed (memerlukan DEMO_PASSWORD).
+uvicorn app.main:app --reload --port 8000 --no-access-log
 
 # API docs tersedia di: http://localhost:8000/docs
 ```
@@ -219,9 +316,8 @@ Seed membuat **satu user, satu project, dan dua asset** (repo GitHub publik) —
 **Opsional — PostgreSQL via Docker Compose** (default tetap SQLite):
 
 ```bash
-docker compose up -d --build
-docker compose exec backend alembic upgrade head
-docker compose exec backend python -m app.seed
+# Atur JWT_SECRET dan POSTGRES_PASSWORD lebih dahulu (lihat panduan Docker di atas).
+docker compose --profile postgres up -d --build db backend-postgres
 ```
 
 ### Mobile App
@@ -231,7 +327,7 @@ Panduan integrasi API, autentikasi, notifikasi email, kamera QR, unit test, sert
 ```bash
 # Dari root repository (aplikasi Flutter ada di root, bukan di subfolder terpisah)
 flutter pub get
-flutter run
+flutter run -d chrome --web-port 8080 --dart-define=API_BASE_URL=http://127.0.0.1:8000
 # Pastikan API_BASE_URL mengarah ke backend (mis. http://10.0.2.2:8000 untuk emulator Android)
 ```
 

@@ -1,4 +1,9 @@
 # Miscellaneous
+.verification/
+.playwright-mcp/
+.env
+.env.*
+!.env.example
 *.class
 *.log
 *.pyc
