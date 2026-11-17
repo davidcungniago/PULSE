@@ -1,6 +1,6 @@
 # P5 — Demo Local Data & Persistence: Daftar Pantau (Watchlist)
 
-Dokumen ini menjelaskan fitur **Daftar Pantau** di Pulse, lokasi implementasinya, dan langkah demo yang bisa diikuti reviewer. Fitur ini memakai `shared_preferences` Flutter untuk menyimpan daftar repositori yang dipantau di perangkat/browser. Data fitur ini **tidak** dikirim ke backend Pulse maupun Firebase.
+Dokumen ini menjelaskan fitur **Daftar Pantau** di Pulse, lokasi implementasinya, dan langkah demo yang bisa diikuti reviewer. Catatan: di UI fitur ini kini tampil sebagai **Radar**. Fitur ini memakai `shared_preferences` Flutter untuk menyimpan daftar repositori yang dipantau di perangkat/browser, dengan koleksi terpisah menurut ID pengguna yang sedang masuk. Data fitur ini **tidak** dikirim ke backend Pulse maupun Firebase.
 
 ## Tujuan dan cakupan
 
@@ -15,9 +15,9 @@ Form di UI
   → SharedPreferences perangkat/browser
 ```
 
-Data daftar pantau tetap tersedia setelah aplikasi ditutup lalu dibuka kembali, atau setelah halaman web di-refresh, selama data situs/aplikasi tidak dihapus dan aplikasi dijalankan pada perangkat/browser serta origin yang sama.
+Data daftar pantau tetap tersedia setelah aplikasi ditutup lalu dibuka kembali, atau setelah halaman web di-refresh, selama pengguna masuk dengan akun yang sama dan data situs/aplikasi tidak dihapus pada perangkat/browser serta origin yang sama.
 
-Fitur ini berdiri sendiri: **tidak memerlukan backend untuk dijalankan**, sehingga cocok untuk demo persistence.
+Penyimpanan Radar tidak memerlukan backend untuk operasi CRUD. Aplikasi penuh tetap memerlukan backend untuk login sebelum pengguna dapat membuka Radar.
 
 ## Lokasi implementasi
 
@@ -27,7 +27,7 @@ Fitur ini berdiri sendiri: **tidak memerlukan backend untuk dijalankan**, sehing
 | Model/entity | `lib/models/watched_repository.dart` | Mendefinisikan `WatchedRepository` dan enum `WatchPriority`, termasuk konversi `toJson`/`fromJson`. |
 | Validasi URL | `lib/services/repository_url.dart` | Fungsi murni `parseRepositoryUrl` dan `repositoryUrlError` untuk URL GitHub/GitLab. |
 | Kontrak repository | `lib/services/watchlist_repository.dart` | Menetapkan operasi baca dan CRUD yang dipakai provider. Berisi juga `InMemoryWatchlistRepository` untuk tes UI. |
-| Repository persisten | `lib/services/local_watchlist_repository.dart` | Memetakan model ke/dari penyimpanan lokal, menyediakan seed data awal, dan memvalidasi input. |
+| Repository persisten | `lib/services/local_watchlist_repository.dart` | Memetakan model ke/dari koleksi lokal per pengguna, menyediakan seed data awal, dan memvalidasi input. |
 | Akses storage | `lib/services/local_storage_service.dart` | Menyimpan dan membaca collection sebagai daftar string JSON di `SharedPreferences`. |
 | Provider data lokal | `lib/features/watchlist/application/watchlist_notifier.dart` | Memuat data dan menjalankan hapus, lalu memberi notifikasi UI. |
 | Provider form | `lib/features/watchlist/application/watchlist_form_notifier.dart` | Menyimpan state form (validasi URL, status submit, error) untuk tambah/ubah. |
@@ -107,7 +107,7 @@ Masuk ke fitur ini dari app bar **Proyek Saya** → ikon **Daftar Pantau** (book
 - Flutter web: refresh halaman dengan `Ctrl+R`/`F5`. Emulator/perangkat: tutup aplikasi lalu jalankan kembali.
 - Buka lagi Daftar Pantau dan pastikan record yang belum dihapus tetap muncul dengan nilai hasil edit terakhir.
 
-Data hanya berlaku untuk penyimpanan lokal yang sama. Origin berbeda (host/port berbeda), browser berbeda, perangkat berbeda, atau penghapusan data situs/aplikasi dapat menghasilkan penyimpanan terpisah atau menghapus record.
+Data hanya berlaku untuk akun dan penyimpanan lokal yang sama. Origin berbeda (host/port berbeda), browser berbeda, perangkat berbeda, atau penghapusan data situs/aplikasi dapat menghasilkan penyimpanan terpisah atau menghapus record. Koleksi lama tanpa ID pemilik tetap tersimpan secara lokal tetapi tidak dibaca oleh akun mana pun; pemiliknya tidak dapat ditentukan dengan aman.
 
 ## Cara reviewer memeriksa implementasi
 
@@ -157,7 +157,7 @@ Screenshot diambil dari aplikasi yang berjalan nyata (`flutter build web`, disaj
 
   ![Daftar pantau setelah refresh](assets/images/p5-watchlist-after-reload.png)
 
-Nilai mentah yang tersimpan di `localStorage` (`flutter.local_watched_repositories`) setelah refresh berisi `express` dan `axios`.
+Nilai mentah tersimpan dengan kunci yang diakhiri ID pengguna, misalnya `flutter.local_watched_repositories:<ID_PENGGUNA>` di web. Kunci lama `flutter.local_watched_repositories` tidak lagi ditampilkan ke akun yang masuk.
 
 ## Batasan yang perlu dijelaskan
 

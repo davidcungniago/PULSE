@@ -14,6 +14,6 @@ class ErrorState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Coba Lagi'))
+            FilledButton(onPressed: onRetry, child: const Text('Coba lagi'))
           ])));
 }

@@ -68,7 +68,7 @@ def test_duplicate_asset_returns_409(client, project):
     )
     resp = client.post(url, json={"RepositoryUrl": "https://github.com/expressjs/express.git"})
     assert resp.status_code == 409
-    assert resp.json() == {"Message": "URL repositori ini sudah ada di project ini."}
+    assert resp.json() == {"Message": "URL repositori ini sudah ada di proyek ini."}
 
 
 def test_duplicate_asset_is_case_insensitive(client, project):

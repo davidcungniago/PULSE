@@ -21,12 +21,12 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     });
     final state = ref.watch(qrProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Pindai QR repository')),
+      appBar: AppBar(title: const Text('Pindai QR repositori')),
       body: ConstrainedPage(
           child: Column(children: [
         const Padding(
             padding: EdgeInsets.all(16),
-            child: Text('Arahkan kamera ke QR berisi URL repository.')),
+            child: Text('Arahkan kamera ke QR berisi URL repositori.')),
         Expanded(
             child: MobileScanner(
           key: ValueKey(_attempt),

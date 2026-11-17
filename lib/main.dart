@@ -6,6 +6,7 @@ import 'app.dart';
 import 'features/watchlist/application/watchlist_notifier.dart';
 import 'services/local_storage_service.dart';
 import 'services/local_watchlist_repository.dart';
+import 'services/session_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,8 +14,13 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
-        watchlistRepositoryProvider.overrideWithValue(
-          LocalWatchlistRepository(LocalStorageService(preferences)),
+        watchlistRepositoryProvider.overrideWith(
+          (ref) => LocalWatchlistRepository(
+            LocalStorageService(preferences),
+            userId: ref.watch(
+              sessionStoreProvider.select((session) => session.user?.id),
+            ),
+          ),
         ),
       ],
       child: const PulseApp(),

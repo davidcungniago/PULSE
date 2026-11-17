@@ -37,7 +37,7 @@ class ProjectListItem extends ConsumerWidget {
       if (summary.hasError)
         TextButton(
             onPressed: () => ref.invalidate(dashboardProvider(project.id)),
-            child: const Text('Ringkasan gagal dimuat. Coba Lagi')),
+            child: const Text('Ringkasan gagal dimuat. Coba lagi')),
     ]);
   }
 }

@@ -1,17 +1,24 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'api_endpoint.dart';
 import 'session_store.dart';
 
 const String apiBaseUrl = String.fromEnvironment(
   'API_BASE_URL',
-  defaultValue: 'http://localhost:8000',
+  defaultValue: '',
 );
 
 class ApiClient {
   ApiClient({String? baseUrl})
       : dio = Dio(
           BaseOptions(
-            baseUrl: baseUrl ?? apiBaseUrl,
+            baseUrl: baseUrl ??
+                resolveApiEndpoint(
+                  configuredUrl: apiBaseUrl,
+                  isWeb: kIsWeb,
+                  pageUri: Uri.base,
+                ),
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 10),
             sendTimeout: const Duration(seconds: 10),

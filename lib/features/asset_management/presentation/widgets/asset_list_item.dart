@@ -5,6 +5,7 @@ import '../../../monitoring/application/monitoring_notifier.dart';
 import '../../../management/presentation/edit_form.dart';
 
 import '../../../../models/asset_model.dart';
+import '../../../../models/date_time_utils.dart';
 import '../../../../widgets/status_badge.dart';
 import '../../../../widgets/asset_card.dart';
 
@@ -18,18 +19,18 @@ class AssetListItem extends ConsumerWidget {
     ref.listen(scanActionProvider(asset.id), (previous, next) {
       if (next.hasError || next.valueOrNull != null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content:
-                Text(next.hasError ? '${next.error}' : next.valueOrNull!)));
+            content: Text(
+                next.hasError ? '${next.error}' : next.valueOrNull!.summary)));
       }
     });
     final scanned = asset.lastScannedAt;
-    final lastSynced = scanned == null
-        ? 'Belum pernah disinkronkan'
-        : 'Terakhir disinkronkan ${scanned.day.toString().padLeft(2, '0')}/${scanned.month.toString().padLeft(2, '0')}/${scanned.year} ${scanned.hour.toString().padLeft(2, '0')}:${scanned.minute.toString().padLeft(2, '0')}';
+    final lastScan = scanned == null
+        ? 'Belum pernah dipindai'
+        : 'Dipindai ${relativeTimeLabel(scanned)}';
     return AssetCard(
       name: asset.name,
       description: '${asset.owner}/${asset.repositoryName}',
-      timeLabel: lastSynced,
+      timeLabel: lastScan,
       status: asset.isActive ? RiskStatus.active : RiskStatus.inactive,
       scanning: scan.isLoading,
       onScan: !asset.isActive

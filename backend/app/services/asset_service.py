@@ -26,7 +26,7 @@ def create_asset(db: Session, project: Project, repository_url: str) -> Asset:
         )
     )
     if existing is not None:
-        raise DuplicateAssetError("URL repositori ini sudah ada di project ini.")
+        raise DuplicateAssetError("URL repositori ini sudah ada di proyek ini.")
 
     asset = Asset(
         project_id=project.id,
@@ -41,5 +41,5 @@ def create_asset(db: Session, project: Project, repository_url: str) -> Asset:
         db.flush()
     except IntegrityError as exc:
         db.rollback()
-        raise DuplicateAssetError("URL repositori ini sudah ada di project ini.") from exc
+        raise DuplicateAssetError("URL repositori ini sudah ada di proyek ini.") from exc
     return asset

@@ -6,8 +6,10 @@ import '../../../models/watched_repository.dart';
 import '../../../widgets/empty_state.dart';
 import '../../../widgets/error_state.dart';
 import '../../../widgets/loading_indicator.dart';
+import '../application/promote_watch_notifier.dart';
 import '../application/watchlist_form_notifier.dart';
 import '../application/watchlist_notifier.dart';
+import 'widgets/promote_sheet.dart';
 import 'widgets/watchlist_form.dart';
 import 'widgets/watchlist_item.dart';
 
@@ -18,23 +20,23 @@ class WatchlistScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final watched = ref.watch(watchlistProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Daftar Pantau')),
+      appBar: AppBar(title: const Text('Radar')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openForm(context, ref),
         icon: const Icon(Icons.add),
-        label: const Text('Tambah Repo'),
+        label: const Text('Tambah repositori'),
       ),
       body: ConstrainedPage(
           child: watched.when(
         loading: () => const LoadingIndicator(),
         error: (_, __) => ErrorState(
-          message: 'Daftar pantau tidak dapat dimuat.',
+          message: 'Radar tidak dapat dimuat.',
           onRetry: () => ref.read(watchlistProvider.notifier).refresh(),
         ),
         data: (items) => items.isEmpty
             ? EmptyState(
-                message: 'Belum ada repositori yang dipantau.',
-                actionLabel: 'Tambah Repo',
+                message: 'Belum ada repositori di Radar.',
+                actionLabel: 'Tambah repositori',
                 onAction: () => _openForm(context, ref),
               )
             : ListView.separated(
@@ -44,6 +46,7 @@ class WatchlistScreen extends ConsumerWidget {
                 itemBuilder: (_, index) => WatchlistItem(
                   item: items[index],
                   onEdit: () => _openForm(context, ref, editing: items[index]),
+                  onPromote: () => _openPromote(context, ref, items[index]),
                 ),
               ),
       )),
@@ -67,5 +70,23 @@ class WatchlistScreen extends ConsumerWidget {
       showDragHandle: true,
       builder: (_) => WatchlistForm(editing: editing),
     );
+  }
+
+  Future<void> _openPromote(
+    BuildContext context,
+    WidgetRef ref,
+    WatchedRepository item,
+  ) async {
+    ref.read(promoteWatchProvider.notifier).reset();
+    final projectName = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => PromoteSheet(item: item),
+    );
+    if (projectName != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Aset ditambahkan ke $projectName.')));
+    }
   }
 }

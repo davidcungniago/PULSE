@@ -15,7 +15,7 @@ void main() {
   testWidgets('menampilkan validasi saat nama proyek kosong', (tester) async {
     final repository = FakeProjectRepository();
     await _pumpScreen(tester, repository);
-    await tester.tap(find.text('Buat Proyek').first);
+    await tester.tap(find.text('Buat proyek').first);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first, '   ');
     await tester.pump();
@@ -29,7 +29,7 @@ void main() {
     final repository = FakeProjectRepository()
       ..addFuture = Completer<Project>().future;
     await _pumpScreen(tester, repository);
-    await tester.tap(find.text('Buat Proyek').first);
+    await tester.tap(find.text('Buat proyek').first);
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextFormField).first, 'Proyek Baru');
     await tester.pump();

@@ -15,7 +15,7 @@ final watchlistProvider =
 class WatchlistNotifier extends AsyncNotifier<List<WatchedRepository>> {
   @override
   Future<List<WatchedRepository>> build() =>
-      ref.read(watchlistRepositoryProvider).getWatched();
+      ref.watch(watchlistRepositoryProvider).getWatched();
 
   Future<void> refresh() async {
     state = const AsyncLoading();

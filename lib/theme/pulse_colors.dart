@@ -53,6 +53,12 @@ class PulseColors {
         preferred, badgeBackground(severityFill(severity), surface), text);
   }
 
+  Color driftText() {
+    final preferred = isDark ? drift : const Color(0xFF1D4ED8);
+    return accessibleBadgeText(
+        preferred, badgeBackground(drift, surface), text);
+  }
+
   Color riskText(RiskStatus status) {
     final preferred = isDark
         ? riskFill(status)

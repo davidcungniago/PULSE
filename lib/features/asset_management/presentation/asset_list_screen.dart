@@ -19,11 +19,11 @@ class AssetListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final assets = ref.watch(assetListProvider(projectId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Kelola Aset')),
+      appBar: AppBar(title: const Text('Kelola aset')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openAddAssetForm(context),
         icon: const Icon(Icons.add),
-        label: const Text('Tambah Aset'),
+        label: const Text('Tambah aset'),
       ),
       body: ConstrainedPage(
           child: Column(
@@ -43,8 +43,8 @@ class AssetListScreen extends ConsumerWidget {
               ),
               data: (items) => items.isEmpty
                   ? EmptyState(
-                      message: 'Belum ada aset di project ini',
-                      actionLabel: 'Tambah Aset',
+                      message: 'Belum ada aset di proyek ini.',
+                      actionLabel: 'Tambah aset',
                       onAction: () => _openAddAssetForm(context),
                     )
                   : ListView.separated(
@@ -101,14 +101,14 @@ class _DemoModeControls extends ConsumerWidget {
           runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            const Text('Mode Demo (Debug)'),
+            const Text('Mode demo (debug)'),
             TextButton(
                 onPressed: notifier.showDemoLoading,
                 child: const Text('Memuat')),
             TextButton(
                 onPressed: notifier.showDemoEmpty, child: const Text('Kosong')),
             TextButton(
-                onPressed: notifier.showDemoError, child: const Text('Error')),
+                onPressed: notifier.showDemoError, child: const Text('Gagal')),
             TextButton(
                 onPressed: notifier.refresh, child: const Text('Data normal')),
             TextButton(

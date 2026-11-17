@@ -45,7 +45,7 @@ class AssetCard extends StatelessWidget {
                 if (onScan != null) ...[
                   const SizedBox(height: 16),
                   PrimaryButton(
-                      label: 'Pindai Sekarang',
+                      label: 'Pindai sekarang',
                       onPressed: onScan,
                       isLoading: scanning,
                       icon: Icons.radar),

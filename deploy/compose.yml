@@ -1,0 +1,50 @@
+services:
+  web:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      PULSE_DOMAIN: ${PULSE_DOMAIN:?Set domain aplikasi}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../build/web:/srv/pulse:ro
+      - tls_data:/data
+      - tls_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backend:
+    build: ../backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: sqlite:////data/pulse.db
+      JWT_SECRET: ${JWT_SECRET:?Set secret autentikasi}
+      CORS_ORIGINS: https://${PULSE_DOMAIN:?Set domain aplikasi}
+      CORS_ORIGIN_REGEX: ""
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+    volumes:
+      - database:/data
+    command: ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --no-access-log"]
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=5)"]
+      interval: 10s
+      timeout: 6s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  database:
+  tls_data:
+  tls_config:

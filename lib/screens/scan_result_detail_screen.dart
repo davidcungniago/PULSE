@@ -27,7 +27,7 @@ class ScanResultDetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Column(children: [
                 PrimaryButton(
-                  label: action.hasError ? 'Coba Lagi' : 'Pindai sekarang',
+                  label: action.hasError ? 'Coba lagi' : 'Pindai sekarang',
                   isLoading: action.isLoading,
                   onPressed: () => ref
                       .read(scanActionProvider(assetId).notifier)
@@ -37,7 +37,8 @@ class ScanResultDetailScreen extends ConsumerWidget {
                   Text('${action.error}',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.error)),
-                if (action.valueOrNull != null) Text(action.valueOrNull!),
+                if (action.valueOrNull != null)
+                  const Text('Pemindaian selesai.'),
               ]),
             ),
             Expanded(
@@ -66,7 +67,7 @@ class ScanResultDetailScreen extends ConsumerWidget {
                                   '${component.name}@${component.version}',
                                   style: PulseTypography.mono),
                               subtitle: Text(
-                                  'Lisensi: ${component.license}\n${component.cveIds.join(", ")}'),
+                                  'Lisensi: ${component.license.isEmpty ? 'Tidak diketahui' : component.license}\n${component.cveIds.join(', ')}'),
                               trailing:
                                   SeverityBadge(severity: component.severity),
                             ),

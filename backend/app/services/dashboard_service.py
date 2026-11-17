@@ -34,6 +34,7 @@ def dashboard(db: Session, project_id: str) -> dict:
                 "AssetName": asset.name,
                 "ComponentCount": count,
                 "CriticalVulnerabilityCount": critical_count,
+                "HasDrift": drift,
                 "LastScannedAt": asset.last_scanned_at,
                 "RiskStatus": risk_status(
                     scan is not None, critical_count, vulnerability_count, drift

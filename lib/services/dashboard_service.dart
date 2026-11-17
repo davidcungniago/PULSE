@@ -7,11 +7,17 @@ class AssetRiskSummary {
       {required this.assetId,
       required this.name,
       required this.status,
-      this.lastScannedAt});
+      this.lastScannedAt,
+      this.componentCount = 0,
+      this.criticalVulnerabilityCount = 0,
+      this.hasDrift = false});
   final String assetId;
   final String name;
   final RiskStatus status;
   final DateTime? lastScannedAt;
+  final int componentCount;
+  final int criticalVulnerabilityCount;
+  final bool hasDrift;
 }
 
 class DashboardData {
@@ -34,6 +40,10 @@ class DashboardData {
                       ? null
                       : parseUtcIso8601(item['LastScannedAt'] as String)
                           .toLocal(),
+                  componentCount: item['ComponentCount'] as int? ?? 0,
+                  criticalVulnerabilityCount:
+                      item['CriticalVulnerabilityCount'] as int? ?? 0,
+                  hasDrift: item['HasDrift'] as bool? ?? false,
                 ))
             .toList(),
       );
@@ -50,21 +60,47 @@ class DashboardData {
   final List<AssetRiskSummary> assets;
 
   RiskStatus get status {
-    for (final status in [
-      RiskStatus.critical,
-      RiskStatus.warning,
-      RiskStatus.healthy
-    ]) {
-      if (assets.any((asset) => asset.status == status)) return status;
+    if (assets.any((asset) => asset.status == RiskStatus.critical)) {
+      return RiskStatus.critical;
     }
-    return RiskStatus.notScanned;
+    if (assets.any((asset) => asset.status == RiskStatus.warning)) {
+      return RiskStatus.warning;
+    }
+    if (assets.every((asset) => asset.status == RiskStatus.notScanned)) {
+      return RiskStatus.notScanned;
+    }
+    if (assets.any((asset) => asset.status == RiskStatus.notScanned)) {
+      return RiskStatus.warning;
+    }
+    return RiskStatus.healthy;
   }
 
-  String get statusLine => switch (status) {
-        RiskStatus.notScanned => 'Tanpa sinyal. Pindai untuk mulai.',
-        RiskStatus.healthy => 'Tidak ada temuan',
-        _ => '$criticalVulnerabilities CVE kritis · $totalAssets aset',
-      };
+  int get assetsNeverScanned =>
+      assets.where((asset) => asset.status == RiskStatus.notScanned).length;
+
+  String get statusLine {
+    if (assets.isEmpty) return 'Tanpa sinyal. Pindai untuk mulai.';
+    if (assetsNeverScanned == assets.length) {
+      return 'Tanpa sinyal. Pindai untuk mulai.';
+    }
+    final critical =
+        assets.where((asset) => asset.status == RiskStatus.critical).length;
+    final drift = assets.where((asset) => asset.hasDrift).length;
+    final warning = assets
+        .where((asset) => asset.status == RiskStatus.warning && !asset.hasDrift)
+        .length;
+    final parts = <String>[
+      if (critical > 0)
+        '$critical aset perlu tindakan'
+      else if (drift > 0)
+        '$drift aset berubah sejak pemindaian terakhir'
+      else if (warning > 0)
+        '$warning aset berperingatan',
+      if (assetsNeverScanned > 0) '$assetsNeverScanned belum dipindai',
+    ];
+    if (parts.isEmpty) return 'Tidak ada tindakan. Denyut stabil.';
+    return parts.join(' · ');
+  }
 }
 
 class DashboardService {

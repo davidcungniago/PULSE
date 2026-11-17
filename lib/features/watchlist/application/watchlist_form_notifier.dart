@@ -33,7 +33,10 @@ final watchlistFormProvider =
 
 class WatchlistFormNotifier extends Notifier<WatchlistFormState> {
   @override
-  WatchlistFormState build() => const WatchlistFormState();
+  WatchlistFormState build() {
+    ref.watch(watchlistRepositoryProvider);
+    return const WatchlistFormState();
+  }
 
   void startAdd() => state = const WatchlistFormState();
 

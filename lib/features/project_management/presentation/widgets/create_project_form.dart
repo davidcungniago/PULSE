@@ -44,7 +44,7 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Buat Proyek',
+            Text('Buat proyek',
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             const Text('Isi nama proyek. Deskripsi bersifat opsional.'),
@@ -71,7 +71,7 @@ class _CreateProjectFormState extends ConsumerState<CreateProjectForm> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Buat Proyek',
+              label: 'Buat proyek',
               isLoading: state.status == CreateProjectStatus.submitting,
               onPressed: state.canSubmit
                   ? () => ref.read(createProjectProvider.notifier).submit(

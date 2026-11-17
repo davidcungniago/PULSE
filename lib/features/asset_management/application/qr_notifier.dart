@@ -23,6 +23,6 @@ class QrNotifier extends AutoDisposeNotifier<QrState> {
       }
     }
     state = const QrState(
-        error: 'QR harus berisi URL repository GitHub atau GitLab.');
+        error: 'QR harus berisi URL repositori GitHub atau GitLab.');
   }
 }

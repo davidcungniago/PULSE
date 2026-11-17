@@ -30,17 +30,20 @@ void main() {
   testWidgets('menampilkan empty state saat tidak ada proyek', (tester) async {
     final repository = FakeProjectRepository();
     await _pumpScreen(tester, repository);
-    expect(find.text('Belum ada proyek.'), findsOneWidget);
+    expect(
+        find.text(
+            'Belum ada proyek. Buat proyek pertama untuk mulai memantau.'),
+        findsOneWidget);
   });
 
-  testWidgets('menampilkan error dan memuat ulang saat Coba Lagi ditekan',
+  testWidgets('menampilkan error dan memuat ulang saat Coba lagi ditekan',
       (tester) async {
     final repository = FakeProjectRepository()..shouldFail = true;
     await _pumpScreen(tester, repository);
     expect(find.text('Proyek tidak dapat dimuat.'), findsOneWidget);
     repository.shouldFail = false;
     repository.projects = [_project()];
-    await tester.tap(find.text('Coba Lagi'));
+    await tester.tap(find.text('Coba lagi'));
     await tester.pump();
     await tester.pump();
     expect(find.text('Platform Pembayaran'), findsOneWidget);

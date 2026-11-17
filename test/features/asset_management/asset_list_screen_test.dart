@@ -31,17 +31,17 @@ void main() {
   testWidgets('menampilkan empty state saat tidak ada aset', (tester) async {
     final repository = FakeAssetRepository();
     await _pumpScreen(tester, repository);
-    expect(find.text('Belum ada aset di project ini'), findsOneWidget);
+    expect(find.text('Belum ada aset di proyek ini.'), findsOneWidget);
   });
 
-  testWidgets('menampilkan error dan memuat ulang saat Coba Lagi ditekan',
+  testWidgets('menampilkan error dan memuat ulang saat Coba lagi ditekan',
       (tester) async {
     final repository = FakeAssetRepository()..shouldFail = true;
     await _pumpScreen(tester, repository);
     expect(find.text('Aset tidak dapat dimuat.'), findsOneWidget);
     repository.shouldFail = false;
     repository.assets = [_asset()];
-    await tester.tap(find.text('Coba Lagi'));
+    await tester.tap(find.text('Coba lagi'));
     await tester.pump();
     await tester.pump();
     expect(find.text('API Utama'), findsOneWidget);
@@ -51,7 +51,7 @@ void main() {
       (tester) async {
     final repository = FakeAssetRepository();
     await _pumpScreen(tester, repository);
-    await tester.tap(find.text('Tambah Aset').first);
+    await tester.tap(find.text('Tambah aset').first);
     await tester.pumpAndSettle();
     await tester.enterText(
         find.byType(TextFormField), 'https://contoh.com/repo');
@@ -67,7 +67,7 @@ void main() {
     final repository = FakeAssetRepository()
       ..addFuture = Completer<Asset>().future;
     await _pumpScreen(tester, repository);
-    await tester.tap(find.text('Tambah Aset').first);
+    await tester.tap(find.text('Tambah aset').first);
     await tester.pumpAndSettle();
     await tester.enterText(
         find.byType(TextFormField), 'https://github.com/pulse/api');

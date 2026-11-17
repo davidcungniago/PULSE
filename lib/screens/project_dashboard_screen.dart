@@ -1,17 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../features/monitoring/application/monitoring_notifier.dart';
-import '../widgets/error_state.dart';
-import '../widgets/empty_state.dart';
-import '../widgets/constrained_page.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/monitoring/application/monitoring_notifier.dart';
+import '../models/date_time_utils.dart';
+import '../models/triage.dart';
+import '../services/dashboard_service.dart';
+import '../services/stable_hash.dart';
+import '../theme/pulse_colors.dart';
+import '../widgets/asset_card.dart';
+import '../widgets/constrained_page.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/error_state.dart';
 import '../widgets/loading_indicator.dart';
 import '../widgets/primary_button.dart';
 import '../widgets/pulse_banner.dart';
-import '../widgets/vital_tile.dart';
-import '../widgets/asset_card.dart';
-import '../services/stable_hash.dart';
+import '../widgets/scan_report_sheet.dart';
+import '../widgets/status_badge.dart';
+import '../widgets/triage_card.dart';
+import '../widgets/vital_line.dart';
 
 class ProjectDashboardScreen extends ConsumerStatefulWidget {
   const ProjectDashboardScreen({super.key, required this.projectId});
@@ -24,13 +31,40 @@ class ProjectDashboardScreen extends ConsumerStatefulWidget {
 
 class _ProjectDashboardScreenState
     extends ConsumerState<ProjectDashboardScreen> {
+  bool _showAllTriage = false;
+
+  Future<void> _scan(List<AssetRiskSummary> assets) async {
+    if (ref.read(scanActionProvider(widget.projectId)).isLoading) return;
+    final report = await ref
+        .read(scanActionProvider(widget.projectId).notifier)
+        .scanAll(assets);
+    if (!mounted || report == null) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => ScanReportSheet(report: report),
+    );
+  }
+
+  DateTime? _latestScan(List<AssetRiskSummary> assets) {
+    DateTime? latest;
+    for (final asset in assets) {
+      final time = asset.lastScannedAt;
+      if (time != null && (latest == null || time.isAfter(latest))) {
+        latest = time;
+      }
+    }
+    return latest;
+  }
+
   @override
   Widget build(BuildContext context) {
     final dashboard = ref.watch(dashboardProvider(widget.projectId));
     final scan = ref.watch(scanActionProvider(widget.projectId));
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Ringkasan Proyek'),
+        title: const Text('Ringkasan proyek'),
         actions: [
           IconButton(
               onPressed: () =>
@@ -48,11 +82,13 @@ class _ProjectDashboardScreenState
           if (data.assets.isEmpty) {
             return EmptyState(
                 message:
-                    'Belum ada aset. Tambahkan repository untuk mulai memantau.',
+                    'Belum ada aset. Tambahkan repositori untuk mulai memantau.',
                 actionLabel: 'Tambah aset',
                 onAction: () =>
                     context.push('/projects/${widget.projectId}/assets'));
           }
+          final triage = buildTriageQueue(data.assets);
+          final visible = _showAllTriage ? triage : triage.take(3).toList();
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -60,37 +96,65 @@ class _ProjectDashboardScreenState
                 status: data.status,
                 seed: stableHash(widget.projectId),
                 sub: data.statusLine,
-                hasDrift: data.assetsWithDrift > 0,
+                hasDrift: data.assets.any((asset) => asset.hasDrift),
                 scanning: scan.isLoading,
                 animate: true,
               ),
-              const SizedBox(height: 16),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Expanded(
-                    child: VitalTile(
-                        value: '${data.totalComponents}', label: 'Komponen')),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: VitalTile(
-                        value: '${data.criticalVulnerabilities}',
-                        label: 'CVE kritis')),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: VitalTile(
-                        value: '${data.assetsWithDrift}', label: 'Drift')),
+              const SizedBox(height: 12),
+              VitalLine(items: [
+                VitalLineItem('${data.totalAssets}', 'aset'),
+                VitalLineItem('${data.totalComponents}', 'komponen'),
+                VitalLineItem('${data.criticalVulnerabilities}', 'kritis',
+                    highlight: data.criticalVulnerabilities > 0),
+                VitalLineItem('${data.assetsWithDrift}', 'drift'),
               ]),
+              const SizedBox(height: 24),
+              Row(children: [
+                Expanded(
+                  child: Text('Perlu tindakan',
+                      style: Theme.of(context).textTheme.titleSmall),
+                ),
+                if (triage.length > 3)
+                  TextButton(
+                      onPressed: () =>
+                          setState(() => _showAllTriage = !_showAllTriage),
+                      child: Text(_showAllTriage
+                          ? 'Ringkas'
+                          : 'Lihat semua (${triage.length})')),
+              ]),
+              const SizedBox(height: 8),
+              if (triage.isEmpty)
+                _CalmCard(lastScannedAt: _latestScan(data.assets))
+              else
+                ...visible.map((entry) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: TriageCard(
+                        entry: entry,
+                        onAction: () {
+                          if (entry.scans) {
+                            _scan([entry.asset]);
+                          } else {
+                            context.push(
+                                '/projects/${widget.projectId}/scan-results/${entry.asset.assetId}');
+                          }
+                        },
+                      ),
+                    )),
               const SizedBox(height: 16),
               PrimaryButton(
-                  label: 'Pindai Semua Aset',
-                  onPressed: () => ref
-                      .read(scanActionProvider(widget.projectId).notifier)
-                      .scanAll(data.assets),
+                  label: 'Pindai semua aset',
+                  onPressed: () => _scan(data.assets),
                   isLoading: scan.isLoading,
                   icon: Icons.radar),
+              if (scan.hasError) ...[
+                const SizedBox(height: 8),
+                Text('${scan.error}',
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
               const SizedBox(height: 24),
-              if (scan.hasValue && scan.value != null) Text(scan.value!),
-              if (scan.hasError) Text('${scan.error}'),
-              Text('Aset', style: Theme.of(context).textTheme.titleLarge),
+              Text('Aset (${data.totalAssets})',
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 8),
               ...data.assets.map(
                 (asset) => Padding(
@@ -100,7 +164,7 @@ class _ProjectDashboardScreenState
                     status: asset.status,
                     timeLabel: asset.lastScannedAt == null
                         ? 'Belum pernah dipindai'
-                        : 'Dipindai ${asset.lastScannedAt!.hour.toString().padLeft(2, '0')}:${asset.lastScannedAt!.minute.toString().padLeft(2, '0')}',
+                        : 'Dipindai ${relativeTimeLabel(asset.lastScannedAt!)}',
                     onTap: () => context.push(
                         '/projects/${widget.projectId}/scan-results/${asset.assetId}'),
                   ),
@@ -115,6 +179,41 @@ class _ProjectDashboardScreenState
           );
         },
       )),
+    );
+  }
+}
+
+class _CalmCard extends StatelessWidget {
+  const _CalmCard({this.lastScannedAt});
+  final DateTime? lastScannedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = PulseColors.of(context);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(Icons.check_circle_outline,
+              size: 20, color: colors.riskText(RiskStatus.healthy)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Tidak ada tindakan. Denyut stabil.',
+                    style: Theme.of(context).textTheme.labelLarge),
+                if (lastScannedAt != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                      'Terakhir dipindai ${relativeTimeLabel(lastScannedAt!)}.',
+                      style: Theme.of(context).textTheme.bodySmall),
+                ],
+              ],
+            ),
+          ),
+        ]),
+      ),
     );
   }
 }

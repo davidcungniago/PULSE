@@ -6,12 +6,15 @@ import 'watchlist_repository.dart';
 class LocalWatchlistRepository implements WatchlistRepository {
   LocalWatchlistRepository(
     this._storage, {
+    required String? userId,
     DateTime Function()? clock,
     String Function()? idGenerator,
-  })  : _clock = clock ?? _defaultClock,
+  })  : _userId = userId,
+        _clock = clock ?? _defaultClock,
         _idGenerator = idGenerator ?? _defaultIdGenerator;
 
   final LocalStorageService _storage;
+  final String? _userId;
   final DateTime Function() _clock;
   final String Function() _idGenerator;
 
@@ -45,8 +48,11 @@ class LocalWatchlistRepository implements WatchlistRepository {
 
   @override
   Future<List<WatchedRepository>> getWatched() async {
-    await _ensureSeed();
-    return _readItems().map(WatchedRepository.fromJson).toList();
+    final userId = _userId;
+    if (userId == null) return [];
+    final key = _keyFor(userId);
+    await _ensureSeed(key);
+    return _readItems(key).map(WatchedRepository.fromJson).toList();
   }
 
   @override
@@ -55,21 +61,21 @@ class LocalWatchlistRepository implements WatchlistRepository {
     required String note,
     required WatchPriority priority,
   }) async {
-    await _ensureSeed();
+    final key = _requireKey();
+    await _ensureSeed(key);
     final normalized = repositoryUrl.trim();
     final error = repositoryUrlError(normalized);
     if (error != null) throw WatchlistException(error);
     final parsed = parseRepositoryUrl(normalized)!;
 
-    final items = _readItems();
+    final items = _readItems(key);
     final isDuplicate = items.any(
       (item) =>
           (item['RepositoryUrl'] as String).toLowerCase() ==
           normalized.toLowerCase(),
     );
     if (isDuplicate) {
-      throw const WatchlistException(
-          'Repositori ini sudah ada di daftar pantau.');
+      throw const WatchlistException('Repositori ini sudah ada di Radar.');
     }
 
     final now = _clock();
@@ -83,7 +89,7 @@ class LocalWatchlistRepository implements WatchlistRepository {
       createdAt: now,
       updatedAt: now,
     );
-    await _writeItems([...items, watched.toJson()]);
+    await _writeItems(key, [...items, watched.toJson()]);
     return watched;
   }
 
@@ -93,7 +99,8 @@ class LocalWatchlistRepository implements WatchlistRepository {
     required String note,
     required WatchPriority priority,
   }) async {
-    final items = _readItems();
+    final key = _requireKey();
+    final items = _readItems(key);
     final index = items.indexWhere((item) => item['Id'] == id);
     if (index == -1) {
       throw const WatchlistException('Repositori tidak ditemukan.');
@@ -105,26 +112,36 @@ class LocalWatchlistRepository implements WatchlistRepository {
     );
     final next = [...items];
     next[index] = updated.toJson();
-    await _writeItems(next);
+    await _writeItems(key, next);
     return updated;
   }
 
   @override
   Future<void> remove(String id) async {
-    final next = _readItems().where((item) => item['Id'] != id).toList();
-    await _writeItems(next);
+    final key = _requireKey();
+    final next = _readItems(key).where((item) => item['Id'] != id).toList();
+    await _writeItems(key, next);
   }
 
-  List<Map<String, dynamic>> _readItems() =>
-      _storage.readCollection(LocalStorageService.watchedRepositoriesKey);
-
-  Future<void> _writeItems(List<Map<String, dynamic>> items) => _storage
-      .writeCollection(LocalStorageService.watchedRepositoriesKey, items);
-
-  Future<void> _ensureSeed() async {
-    if (_storage.hasCollection(LocalStorageService.watchedRepositoriesKey)) {
-      return;
+  String _requireKey() {
+    final userId = _userId;
+    if (userId == null) {
+      throw const WatchlistException('Masuk untuk mengakses Radar.');
     }
-    await _writeItems([..._seed]);
+    return _keyFor(userId);
+  }
+
+  String _keyFor(String userId) =>
+      '${LocalStorageService.watchedRepositoriesKey}:$userId';
+
+  List<Map<String, dynamic>> _readItems(String key) =>
+      _storage.readCollection(key);
+
+  Future<void> _writeItems(String key, List<Map<String, dynamic>> items) =>
+      _storage.writeCollection(key, items);
+
+  Future<void> _ensureSeed(String key) async {
+    if (_storage.hasCollection(key)) return;
+    await _writeItems(key, [..._seed]);
   }
 }

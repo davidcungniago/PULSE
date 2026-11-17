@@ -4,7 +4,21 @@
 
 ## Instalasi ulang dari fresh clone dan akses demo
 
-Panduan berikut adalah jalur utama untuk reviewer. Jangan menyalin `.env`, virtualenv, database, atau folder `build` dari instalasi lama. Gunakan terminal PowerShell terpisah untuk backend dan frontend. Versi verifikasi: Flutter 3.47.5 / Dart 3.13.4, Python 3.13. Git dan akses unduhan dependency diperlukan.
+Panduan berikut adalah jalur utama untuk reviewer. Jangan menyalin `.env`, virtualenv, database, atau folder `build` dari instalasi lama. Gunakan terminal PowerShell terpisah untuk backend dan frontend. Versi verifikasi deployment: Flutter 3.47.5 / Dart 3.13.4, Python 3.12. Git dan akses unduhan dependency diperlukan.
+
+### Demo online P9
+
+Pada 16 November 2026, aplikasi berjalan di **https://52-63-244-243.nip.io/pulse/** dengan API health di **https://52-63-244-243.nip.io/health**. Bukti tampilan: [login](docs/screenshots/p9-live-login.png), [proyek](docs/screenshots/p9-live-project-created.png), [aset](docs/screenshots/p9-live-asset-created.png), dan [hasil pemindaian](docs/screenshots/p9-live-scan-result.png). Daftar akun sendiri melalui tombol **Daftar**; tidak ada akun/password bersama. URL memakai IP publik EC2 yang dapat berubah jika instance dihentikan lalu dijalankan lagi. Sumber deployment yang sedang live berasal dari working tree lokal pada tanggal tersebut; perubahan lokal harus Anda commit dan push sendiri agar fresh clone menghasilkan versi yang sama.
+
+Server memakai Amazon Linux 2023, Docker, dan Caddy. Build frontend untuk path publik ini memakai `flutter build web --no-wasm-dry-run --base-href /pulse/` tanpa `API_BASE_URL` sehingga API memakai origin yang sama. Pada server, simpan `PULSE_DOMAIN` dan `JWT_SECRET` stabil di `/opt/pulse/.env` dengan izin `600`, kemudian jalankan dari `/opt/pulse`:
+
+```sh
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live config --quiet
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live up -d --build
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live ps
+```
+
+Paket server hanya perlu `backend/app`, `backend/alembic`, `backend/alembic.ini`, `backend/requirements.txt`, `backend/Dockerfile`, `backend/.dockerignore`, `deploy/`, dan hasil `build/web`. Jangan unggah `.env`, database, virtualenv, atau `.git`. Untuk rincian verifikasi dan pekerjaan P10–P11 yang belum selesai, lihat [catatan deployment](docs/P9-P11.md).
 
 ```powershell
 git clone https://github.com/davidcungniago/PULSE.git

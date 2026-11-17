@@ -59,13 +59,13 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              _isEditing ? 'Ubah Repositori' : 'Tambah Repositori',
+              _isEditing ? 'Ubah repositori' : 'Tambah repositori',
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 8),
             Text(_isEditing
                 ? 'Ubah catatan atau prioritas. URL tidak dapat diubah.'
-                : 'Masukkan URL repository GitHub/GitLab untuk dipantau.'),
+                : 'Masukkan URL repositori GitHub atau GitLab untuk dipantau.'),
             const SizedBox(height: 24),
             if (state.submitError != null)
               Padding(
@@ -105,7 +105,7 @@ class _WatchlistFormState extends ConsumerState<WatchlistForm> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: _isEditing ? 'Simpan' : 'Tambah ke Daftar',
+              label: _isEditing ? 'Simpan' : 'Tambah',
               isLoading: state.status == WatchlistFormStatus.submitting,
               onPressed: state.canSubmit
                   ? () => ref.read(watchlistFormProvider.notifier).submit(

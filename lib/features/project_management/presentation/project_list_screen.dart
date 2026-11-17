@@ -21,8 +21,8 @@ class ProjectListScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Pusat pemantauan'), actions: [
         IconButton(
             onPressed: () => context.push('/watchlist'),
-            icon: const Icon(Icons.bookmarks_outlined),
-            tooltip: 'Daftar Pantau'),
+            icon: const Icon(Icons.radar),
+            tooltip: 'Radar'),
         IconButton(
             onPressed: () => context.push('/profile'),
             icon: const Icon(Icons.person_outline))
@@ -30,7 +30,7 @@ class ProjectListScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
           onPressed: () => _openCreateProjectForm(context, ref),
           icon: const Icon(Icons.add),
-          label: const Text('Buat Proyek')),
+          label: const Text('Buat proyek')),
       body: ConstrainedPage(
           child: projects.when(
         loading: () => const LoadingIndicator(),
@@ -40,8 +40,9 @@ class ProjectListScreen extends ConsumerWidget {
         ),
         data: (items) => items.isEmpty
             ? EmptyState(
-                message: 'Belum ada proyek.',
-                actionLabel: 'Buat Proyek',
+                message:
+                    'Belum ada proyek. Buat proyek pertama untuk mulai memantau.',
+                actionLabel: 'Buat proyek',
                 onAction: () => _openCreateProjectForm(context, ref),
               )
             : ListView.separated(

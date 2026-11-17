@@ -1,0 +1,15 @@
+- generic [ref=e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - heading "Pusat pemantauan" [active] [level=2] [ref=e135]
+            - button "Radar" [ref=e136]
+            - button [ref=e137]
+          - generic:
+            - group:
+              - group:
+                - 'button "Demo Pulse P9 Verifikasi deployment live Status: Peringatan. Peringatan" [ref=e138]'
+                - button "Ubah proyek" [ref=e139]
+          - button "Buat proyek" [ref=e140]

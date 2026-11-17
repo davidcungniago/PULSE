@@ -12,3 +12,13 @@ DateTime parseUtcIso8601(String value) {
     parsed.microsecond,
   );
 }
+
+String relativeTimeLabel(DateTime time, {DateTime? now}) {
+  final difference = (now ?? DateTime.now()).difference(time);
+  if (difference.isNegative || difference.inMinutes < 1) return 'baru saja';
+  if (difference.inMinutes < 60) return '${difference.inMinutes} menit lalu';
+  if (difference.inHours < 24) return '${difference.inHours} jam lalu';
+  if (difference.inDays == 1) return 'kemarin';
+  if (difference.inDays < 7) return '${difference.inDays} hari lalu';
+  return '${difference.inDays ~/ 7} minggu lalu';
+}

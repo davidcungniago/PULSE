@@ -1,0 +1,4 @@
+11. [GET] https://52-63-244-243.nip.io/api/projects => [401] 
+12. [GET] https://52-63-244-243.nip.io/api/projects => [401] 
+
+Note: 6 static requests not shown, run with "static" option to see them.

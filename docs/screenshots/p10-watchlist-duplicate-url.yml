@@ -1,0 +1,27 @@
+- generic [ref=f1e5] [cursor=pointer]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - button "Back" [ref=f1e182]
+            - heading "Radar" [level=2] [ref=f1e183]
+          - generic:
+            - group:
+              - group "express https://github.com/expressjs/express Framework utama layanan API. Tinggi" [ref=f1e184]:
+                - button "Jadikan aset" [ref=f1e185]
+                - button "Ubah" [ref=f1e186]
+                - button "Hapus" [ref=f1e187]
+              - group "lodash https://github.com/lodash/lodash Pustaka utilitas; pantau CVE prototype pollution. Sedang" [ref=f1e188]:
+                - button "Jadikan aset" [ref=f1e189]
+                - button "Ubah" [ref=f1e190]
+                - button "Hapus" [ref=f1e191]
+              - group "sdk https://github.com/dart-lang/sdk Catatan akun audit A Sedang" [ref=f1e192]:
+                - button "Jadikan aset" [ref=f1e193]
+                - button "Ubah" [ref=f1e194]
+                - button "Hapus" [ref=f1e195]
+              - group "express https://github.com/expressjs/express.git/ Sedang" [ref=f1e196]:
+                - button "Jadikan aset" [ref=f1e197]
+                - button "Ubah" [ref=f1e198]
+                - button "Hapus" [ref=f1e199]
+          - button "Tambah repositori" [active] [ref=f1e200]

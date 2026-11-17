@@ -10,16 +10,34 @@ class FakeMonitoringRepository extends MonitoringRepository {
   String? failAsset;
 
   @override
-  Future<DashboardData> dashboard(String id) async => const DashboardData(
-        totalAssets: 1,
-        totalComponents: 1,
-        criticalVulnerabilities: 1,
-        assetsWithDrift: 0,
+  Future<DashboardData> dashboard(String id) async => DashboardData(
+        totalAssets: 4,
+        totalComponents: 128,
+        criticalVulnerabilities: 2,
+        assetsWithDrift: 1,
         assets: [
           AssetRiskSummary(
               assetId: 'asset-1',
               name: 'API utama',
-              status: RiskStatus.critical)
+              status: RiskStatus.critical,
+              componentCount: 64,
+              criticalVulnerabilityCount: 2,
+              lastScannedAt: DateTime.utc(2026, 10, 29, 8)),
+          AssetRiskSummary(
+              assetId: 'asset-2',
+              name: 'Webhook',
+              status: RiskStatus.warning,
+              componentCount: 32,
+              hasDrift: true,
+              lastScannedAt: DateTime.utc(2026, 10, 29, 7)),
+          AssetRiskSummary(
+              assetId: 'asset-3',
+              name: 'Worker',
+              status: RiskStatus.warning,
+              componentCount: 20,
+              lastScannedAt: DateTime.utc(2026, 10, 28, 8)),
+          const AssetRiskSummary(
+              assetId: 'asset-4', name: 'Docs', status: RiskStatus.notScanned),
         ],
       );
   @override

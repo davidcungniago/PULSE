@@ -57,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       animate: false,
                       sub: 'Tidak ada temuan'),
                   const SizedBox(height: 24),
-                  Text('Buat Akun',
+                  Text('Buat akun',
                       style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 8),
                   const Text('Mulai memantau risiko proyek Anda.'),

@@ -1,0 +1,19 @@
+- generic [ref=f2e5]:
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - heading "Hasil pemindaian" [active] [level=2] [ref=f2e6]
+          - button "Pindai sekarang" [ref=f2e7]
+          - generic:
+            - group:
+              - generic [ref=f2e8]: Komponen
+              - generic: "hbs@4.4.0 Lisensi: Tidak diketahui CVE-2021-32822 Sedang"
+              - generic: "qs@6.16.0 Lisensi: Tidak diketahui CVE-2026-110816 Sedang"
+              - generic: "accepts@2.0.0 Lisensi: Tidak diketahui Aman"
+              - generic: "after@0.8.2 Lisensi: Tidak diketahui Aman"
+              - generic: "body-parser@2.4.0 Lisensi: Tidak diketahui Aman"
+              - generic: "connect-redis@8.0.1 Lisensi: Tidak diketahui Aman"
+              - generic: "content-disposition@2.0.1 Lisensi: Tidak diketahui Aman"
+              - generic: "content-type@2.0.0 Lisensi: Tidak diketahui Aman"
+              - generic: "cookie@0.7.1 Lisensi: Tidak diketahui Aman"

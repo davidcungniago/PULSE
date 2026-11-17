@@ -54,6 +54,8 @@ def test_authenticated_vertical_slice_and_notification_failure(db_session):
             ).json()
             assert client.post(f"/api/assets/{asset['Id']}/scan").status_code == 200
             assert client.get(f"/api/assets/{asset['Id']}/drift-events").json() == []
+            first_dashboard = client.get(f"/api/projects/{project['Id']}/dashboard").json()
+            assert first_dashboard["Assets"][0]["HasDrift"] is False
             fetcher.manifests = {"requirements.txt": "requests==2.32.0"}
             assert client.post(f"/api/assets/{asset['Id']}/scan").status_code == 200
             assert len(client.get(f"/api/assets/{asset['Id']}/scan-results").json()) == 2
@@ -62,6 +64,7 @@ def test_authenticated_vertical_slice_and_notification_failure(db_session):
             )
             dashboard = client.get(f"/api/projects/{project['Id']}/dashboard").json()
             assert dashboard["AssetsWithDrift"] == 1
+            assert dashboard["Assets"][0]["HasDrift"] is True
             assert dashboard["Assets"][0]["RiskStatus"] == "WARNING"
             assert (
                 client.put(f"/api/projects/{project['Id']}", json={"Name": "P7"}).json()["Name"]

@@ -1,0 +1,12 @@
+- generic [ref=f1e201]:
+  - generic "Dialog":
+    - button "Dismiss" [ref=f1e202]
+    - group:
+      - generic [ref=f1e203]: Tambah repositori
+      - generic [ref=f1e204]: Masukkan URL repositori GitHub atau GitLab untuk dipantau.
+      - textbox "URL repositori" [ref=f1e206]
+      - textbox "Catatan (opsional)" [ref=f1e208]
+      - button "Rendah" [ref=f1e209]
+      - button "Sedang" [ref=f1e210]
+      - button "Tinggi" [ref=f1e211]
+      - button "Tambah" [disabled] [ref=f1e212]

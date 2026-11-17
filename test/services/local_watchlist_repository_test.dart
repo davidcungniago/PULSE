@@ -23,12 +23,34 @@ void main() {
       priority: WatchPriority.high,
     );
 
-    final reopened = LocalWatchlistRepository(LocalStorageService(preferences));
+    final reopened = LocalWatchlistRepository(
+      LocalStorageService(preferences),
+      userId: 'user-a',
+    );
     final items = await reopened.getWatched();
     final axios = items.firstWhere((item) => item.repositoryName == 'axios');
     expect(axios.owner, 'axios');
     expect(axios.note, 'HTTP client.');
     expect(axios.priority, WatchPriority.high);
+  });
+
+  test('catatan Radar akun pertama tidak terlihat oleh akun kedua', () async {
+    final (firstAccount, preferences) = await _fresh();
+    await firstAccount.add(
+      repositoryUrl: 'https://github.com/dart-lang/sdk',
+      note: 'Catatan pribadi akun pertama',
+      priority: WatchPriority.high,
+    );
+
+    final secondAccount = LocalWatchlistRepository(
+      LocalStorageService(preferences),
+      userId: 'user-b',
+    );
+    final secondItems = await secondAccount.getWatched();
+
+    expect(
+        secondItems.any((item) => item.note == 'Catatan pribadi akun pertama'),
+        isFalse);
   });
 
   test('mengabaikan akhiran .git dan garis miring di akhir', () async {
@@ -100,7 +122,7 @@ void main() {
           note: '',
           priority: WatchPriority.low),
       throwsA(isA<WatchlistException>().having((error) => error.message,
-          'message', 'Repositori ini sudah ada di daftar pantau.')),
+          'message', 'Repositori ini sudah ada di Radar.')),
     );
   });
 
@@ -112,6 +134,46 @@ void main() {
 
     expect(await repository.getWatched(), isEmpty);
   });
+
+  test('Radar tidak menampilkan koleksi lama tanpa pemilik', () async {
+    final (repository, preferences) = await _fresh();
+    final privateItem = await repository.add(
+      repositoryUrl: 'https://github.com/dart-lang/sdk',
+      note: 'Catatan lama tanpa pemilik',
+      priority: WatchPriority.high,
+    );
+    await LocalStorageService(preferences).writeCollection(
+      LocalStorageService.watchedRepositoriesKey,
+      [privateItem.toJson()],
+    );
+
+    final secondAccount = LocalWatchlistRepository(
+      LocalStorageService(preferences),
+      userId: 'user-b',
+    );
+    final items = await secondAccount.getWatched();
+
+    expect(items.any((item) => item.note == 'Catatan lama tanpa pemilik'),
+        isFalse);
+  });
+
+  test('Radar tanpa sesi tidak membaca atau mengubah koleksi akun', () async {
+    final (_, preferences) = await _fresh();
+    final guest = LocalWatchlistRepository(
+      LocalStorageService(preferences),
+      userId: null,
+    );
+
+    expect(await guest.getWatched(), isEmpty);
+    await expectLater(
+      guest.add(
+        repositoryUrl: 'https://github.com/dart-lang/sdk',
+        note: '',
+        priority: WatchPriority.low,
+      ),
+      throwsA(isA<WatchlistException>()),
+    );
+  });
 }
 
 Future<(LocalWatchlistRepository, SharedPreferences)> _fresh() async {
@@ -120,6 +182,7 @@ Future<(LocalWatchlistRepository, SharedPreferences)> _fresh() async {
   var counter = 0;
   final repository = LocalWatchlistRepository(
     LocalStorageService(preferences),
+    userId: 'user-a',
     clock: () => DateTime.utc(2026, 10, 15, 8),
     idGenerator: () => 'test-${counter++}',
   );

@@ -46,7 +46,7 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Tambah Aset',
+            Text('Tambah aset',
                 style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 8),
             const Text('Masukkan URL repositori GitHub atau GitLab.'),
@@ -71,7 +71,7 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
             ),
             const SizedBox(height: 24),
             PrimaryButton(
-              label: 'Tambah Aset',
+              label: 'Tambah aset',
               isLoading: state.status == AddAssetStatus.submitting,
               onPressed: state.canSubmit
                   ? () => ref
@@ -81,7 +81,7 @@ class _AddAssetFormState extends ConsumerState<AddAssetForm> {
             ),
             TextButton.icon(
               icon: const Icon(Icons.qr_code_scanner),
-              label: const Text('Pindai QR repository'),
+              label: const Text('Pindai QR repositori'),
               onPressed: state.status == AddAssetStatus.submitting
                   ? null
                   : () async {

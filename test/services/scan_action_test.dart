@@ -19,8 +19,12 @@ void main() {
       AssetRiskSummary(assetId: 'b', name: 'B', status: RiskStatus.notScanned),
     ]);
     expect(container.read(scanActionProvider('p')).isLoading, isTrue);
-    await future;
+    final report = await future;
     expect(repository.scanned, ['a', 'b']);
-    expect(container.read(scanActionProvider('p')).value, contains('1/2'));
+    expect(report, isNotNull);
+    expect(report!.succeeded, 1);
+    expect(report.failed, 1);
+    expect(report.attempts.first.error, isNotNull);
+    expect(container.read(scanActionProvider('p')).value?.hasFailures, isTrue);
   });
 }

@@ -15,11 +15,11 @@ void main() {
       response: Response(
         requestOptions: RequestOptions(path: '/'),
         statusCode: 409,
-        data: {'Message': 'URL repositori ini sudah ada di project ini.'},
+        data: {'Message': 'URL repositori ini sudah ada di proyek ini.'},
       ),
     );
     expect(mapApiErrorToMessage(error),
-        'URL repositori ini sudah ada di project ini.');
+        'URL repositori ini sudah ada di proyek ini.');
   });
 
   test('memakai pesan koneksi saat tidak dapat terhubung', () {

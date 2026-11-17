@@ -32,7 +32,7 @@ def update_asset(db: Session, asset: Asset, name: str, repository_url: str, acti
         )
     )
     if duplicate:
-        raise ValueError("URL repositori ini sudah ada di project ini.")
+        raise ValueError("URL repositori ini sudah ada di proyek ini.")
     asset.name = name
     asset.repository_url = parsed.repository_url
     asset.owner = parsed.owner

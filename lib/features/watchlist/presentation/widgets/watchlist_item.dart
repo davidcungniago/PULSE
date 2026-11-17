@@ -6,10 +6,15 @@ import '../../application/watchlist_notifier.dart';
 import 'priority_badge.dart';
 
 class WatchlistItem extends ConsumerWidget {
-  const WatchlistItem({super.key, required this.item, required this.onEdit});
+  const WatchlistItem(
+      {super.key,
+      required this.item,
+      required this.onEdit,
+      required this.onPromote});
 
   final WatchedRepository item;
   final VoidCallback onEdit;
+  final VoidCallback onPromote;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Card(
@@ -32,6 +37,11 @@ class WatchlistItem extends ConsumerWidget {
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       PriorityBadge(priority: item.priority),
+                      TextButton.icon(
+                        onPressed: onPromote,
+                        icon: const Icon(Icons.playlist_add, size: 18),
+                        label: const Text('Jadikan aset'),
+                      ),
                       IconButton(
                         onPressed: onEdit,
                         icon: const Icon(Icons.edit_outlined),
@@ -55,7 +65,7 @@ class WatchlistItem extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Hapus repositori?'),
         content: Text(
-            '${item.repositoryName} akan dihapus dari daftar pantau lokal.'),
+            '${item.repositoryName} akan dihapus dari Radar di perangkat ini.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),

@@ -16,6 +16,7 @@ import '../screens/register_screen.dart';
 import '../screens/scan_result_detail_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  GoRouter.optionURLReflectsImperativeAPIs = true;
   ref.listen(sessionStoreProvider.select((session) => session.user?.id),
       (previous, next) {
     if (previous != next) {
