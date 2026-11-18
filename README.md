@@ -18,6 +18,23 @@ docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live up
 docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live ps
 ```
 
+### Domain DuckDNS gratis
+
+Domain `pulse-demo.duckdns.org` sudah diklaim oleh pemilik. Migrasi hostname belum dinyatakan live sampai HTTPS dan API benar-benar diuji. DuckDNS tidak memerlukan Elastic IP; layanan updater pada `deploy/compose.yml` memperbarui alamat IPv4 publik setiap lima menit. VPS EC2 tetap menggunakan kredit/biaya AWS. Token DuckDNS adalah rahasia: jangan kirim melalui chat, terminal bersama, log, atau Git.
+
+Setelah paket `deploy/` terbaru tersedia di `/opt/pulse`, buka AWS Systems Manager Session Manager ke instance Pulse. Dalam sesi server, edit `/opt/pulse/.env` tanpa mencetak isinya. Ubah `PULSE_DOMAIN` menjadi `pulse-demo.duckdns.org` dan tambahkan `DUCKDNS_TOKEN` dari dashboard DuckDNS; pertahankan `JWT_SECRET` lama. Batasi izin file dengan `chmod 600 /opt/pulse/.env`. Jangan membuat `.env` dari `deploy/.env.example` pada server yang sudah memiliki data karena itu akan mengganti secret yang ada.
+
+Dari `/opt/pulse`, jalankan updater sekali untuk memastikan DuckDNS menerima token dan nama domain sebelum mengganti Caddy:
+
+```sh
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live --profile duckdns run --rm duckdns python /app/duckdns_updater.py --once
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live --profile duckdns config --quiet
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live --profile duckdns up -d
+docker compose --env-file /opt/pulse/.env -f deploy/compose.yml -p pulse-live --profile duckdns ps
+```
+
+Output updater yang berhasil hanya `Pembaruan DuckDNS berhasil.`. Pastikan DNS mengarah ke IP publik instance, lalu uji `https://pulse-demo.duckdns.org/pulse/` dan `https://pulse-demo.duckdns.org/health`. Caddy menerbitkan sertifikat HTTPS otomatis setelah DNS benar dan port 80/443 dapat diakses. Backend menerima origin baru melalui `PULSE_DOMAIN`. Jangan menjalankan `docker compose down -v` karena volume menyimpan database dan sertifikat. Jika tes hostname baru belum lulus, kembalikan `PULSE_DOMAIN` lama di `.env` dan jalankan ulang `up -d` tanpa menghapus volume. Setelah instance berhenti dan dimulai kembali, updater akan mengarahkan DNS ke IP publik baru pada siklus berikutnya.
+
 Paket server hanya perlu `backend/app`, `backend/alembic`, `backend/alembic.ini`, `backend/requirements.txt`, `backend/Dockerfile`, `backend/.dockerignore`, `deploy/`, dan hasil `build/web`. Jangan unggah `.env`, database, virtualenv, atau `.git`. Untuk rincian verifikasi dan pekerjaan P10–P11 yang belum selesai, lihat [catatan deployment](docs/P9-P11.md).
 
 ```powershell

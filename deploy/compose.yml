@@ -1,4 +1,21 @@
 services:
+  duckdns:
+    image: python:3.12-alpine
+    profiles: [duckdns]
+    restart: unless-stopped
+    command: ["python", "/app/duckdns_updater.py"]
+    environment:
+      PULSE_DOMAIN: ${PULSE_DOMAIN:?Set domain aplikasi}
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN:?Set token DuckDNS}
+    volumes:
+      - ./duckdns_updater.py:/app/duckdns_updater.py:ro
+    user: "65532:65532"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   web:
     image: caddy:2
     restart: unless-stopped
